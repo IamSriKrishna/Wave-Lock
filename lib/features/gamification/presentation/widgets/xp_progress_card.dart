@@ -27,11 +27,7 @@ class XpProgressCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Icon(
-                Icons.bolt_rounded,
-                color: AppColors.primary,
-                size: 30,
-              ),
+              Icon(Icons.bolt_rounded, color: AppColors.primary, size: 30),
               const SizedBox(width: 8),
               Text(
                 '${progress.totalXp} XP',
@@ -43,7 +39,7 @@ class XpProgressCard extends StatelessWidget {
               const Spacer(),
               Text(
                 'LEVEL ${progress.currentLevel}',
-                style: const TextStyle(
+                style: TextStyle(
                   color: AppColors.primary,
                   fontWeight: FontWeight.bold,
                 ),
@@ -61,10 +57,7 @@ class XpProgressCard extends StatelessWidget {
           const SizedBox(height: 10),
           Text(
             '${progress.xpInCurrentLevel} / 100 XP to next level',
-            style: const TextStyle(
-              color: AppColors.textSecondary,
-              fontSize: 12,
-            ),
+            style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
           ),
         ],
       ),

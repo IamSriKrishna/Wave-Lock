@@ -38,7 +38,7 @@ class PomodoroTimerCard extends StatelessWidget {
           Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text(
+              Text(
                 'TIME REMAINING',
                 style: TextStyle(
                   color: AppColors.textSecondary,
@@ -60,10 +60,7 @@ class PomodoroTimerCard extends StatelessWidget {
               const SizedBox(height: 8),
               Text(
                 '${(progress * 100).toInt()}% completed',
-                style: const TextStyle(
-                  color: AppColors.textSecondary,
-                  fontSize: 13,
-                ),
+                style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
               ),
             ],
           ),

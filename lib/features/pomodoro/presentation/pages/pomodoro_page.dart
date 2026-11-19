@@ -273,7 +273,7 @@ class _PomodoroView extends StatelessWidget {
                     ),
                     child: Column(
                       children: [
-                        const Text(
+                        Text(
                           'COMPLETED FOCUS SESSIONS',
                           style: TextStyle(
                             color: AppColors.textSecondary,
@@ -284,7 +284,7 @@ class _PomodoroView extends StatelessWidget {
                         const SizedBox(height: 10),
                         Text(
                           '${session.completedFocusSessions}',
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: AppColors.primary,
                             fontSize: 32,
                             fontWeight: FontWeight.bold,

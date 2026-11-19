@@ -113,10 +113,7 @@ class _StrictModeView extends StatelessWidget {
                     '${settings.blockedPackageNames.length} selected',
                     style: const TextStyle(color: Colors.grey),
                   ),
-                  trailing: const Icon(
-                    Icons.chevron_right,
-                    color: AppColors.primary,
-                  ),
+                  trailing: Icon(Icons.chevron_right, color: AppColors.primary),
                   enabled: !settings.isActive,
                   onTap: () async {
                     final selected = await Navigator.push<List<String>>(
@@ -241,7 +238,7 @@ class _StrictModeView extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-          const Text(
+          Text(
             'Complete the linked mission to release Strict Mode.',
             style: TextStyle(color: AppColors.primary, fontSize: 13),
           ),
@@ -446,7 +443,7 @@ class _MissionSelectionSheet extends StatelessWidget {
     return ListTile(
       tileColor: AppColors.background,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-      leading: const CircleAvatar(
+      leading: CircleAvatar(
         backgroundColor: AppColors.primary,
         child: Icon(Icons.flag_rounded, color: Colors.black),
       ),
@@ -461,7 +458,7 @@ class _MissionSelectionSheet extends StatelessWidget {
         '${mission.durationMinutes} minutes • ${mission.status}',
         style: const TextStyle(color: Colors.grey),
       ),
-      trailing: const Icon(Icons.chevron_right, color: AppColors.primary),
+      trailing: Icon(Icons.chevron_right, color: AppColors.primary),
       onTap: () {
         Navigator.pop(context, mission.id);
       },

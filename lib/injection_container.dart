@@ -3,6 +3,7 @@ import 'package:get_it/get_it.dart';
 import 'package:uuid/uuid.dart';
 import 'package:wakelock/core/services/notification_service.dart';
 import 'package:wakelock/core/services/strict_mode_service.dart';
+import 'package:wakelock/core/theme/app_theme_controller.dart';
 import 'package:wakelock/features/events/domain/services/event_occurrence_engine.dart';
 import 'package:wakelock/features/app_usage/data/repositories/daily_growth_progress_repository.dart';
 import 'package:wakelock/features/app_usage/domain/services/app_usage_service.dart';
@@ -63,6 +64,9 @@ Future<void> setupDependencies() async {
   getIt.registerLazySingleton<Uuid>(() => const Uuid());
 
   getIt.registerLazySingleton<StrictModeService>(() => StrictModeService());
+  getIt.registerLazySingleton<AppThemeController>(
+    () => AppThemeController(getIt<AppDatabase>()),
+  );
 
   getIt.registerLazySingleton<AppUsageService>(() => const AppUsageService());
   getIt.registerLazySingleton<DailyGrowthPlanGenerator>(

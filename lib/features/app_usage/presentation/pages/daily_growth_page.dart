@@ -173,7 +173,7 @@ class _DailyGrowthPageState extends State<DailyGrowthPage>
                     ),
                   ),
                   const SizedBox(height: 8),
-                  const Text(
+                  Text(
                     'A daily challenge built around your goals and screen-time habits. Complete each stage to earn points.',
                     style: TextStyle(
                       color: AppColors.textSecondary,
@@ -290,7 +290,7 @@ class _ProgressCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Icon(Icons.stars_rounded, color: AppColors.primary),
+              Icon(Icons.stars_rounded, color: AppColors.primary),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
@@ -300,7 +300,7 @@ class _ProgressCard extends StatelessWidget {
               ),
               Text(
                 '+${completed * 20} pts',
-                style: const TextStyle(
+                style: TextStyle(
                   color: AppColors.primary,
                   fontWeight: FontWeight.bold,
                 ),
@@ -364,7 +364,7 @@ class _GrowthStepCard extends StatelessWidget {
               children: [
                 Text(
                   'STAGE $stage · ${step.estimatedMinutes} MIN',
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppColors.primary,
                     fontSize: 11,
                     fontWeight: FontWeight.bold,
@@ -382,7 +382,7 @@ class _GrowthStepCard extends StatelessWidget {
                 const SizedBox(height: 5),
                 Text(
                   step.goal,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppColors.textSecondary,
                     fontSize: 12,
                   ),
@@ -390,10 +390,7 @@ class _GrowthStepCard extends StatelessWidget {
                 const SizedBox(height: 8),
                 Text(
                   step.description,
-                  style: const TextStyle(
-                    color: AppColors.textSecondary,
-                    height: 1.4,
-                  ),
+                  style: TextStyle(color: AppColors.textSecondary, height: 1.4),
                 ),
               ],
             ),
@@ -435,10 +432,7 @@ class _InfoCard extends StatelessWidget {
           Expanded(
             child: Text(
               text,
-              style: const TextStyle(
-                color: AppColors.textSecondary,
-                height: 1.4,
-              ),
+              style: TextStyle(color: AppColors.textSecondary, height: 1.4),
             ),
           ),
           ?action,

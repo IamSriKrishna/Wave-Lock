@@ -5,6 +5,7 @@ import 'package:wakelock/features/events/domain/services/event_reminder_schedule
 
 import 'core/router/app_start_gate.dart';
 import 'core/theme/app_theme.dart';
+import 'core/theme/app_theme_controller.dart';
 import 'injection_container.dart';
 
 Future<void> _restoreEventReminders() async {
@@ -31,6 +32,7 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await setupDependencies();
+  await getIt<AppThemeController>().load();
 
   await NotificationService.instance.initialize();
   await _restoreEventReminders();
@@ -43,11 +45,15 @@ class WakeLockApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'WakeLock',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.darkTheme,
-      home: const AppStartGate(),
+    final themeController = getIt<AppThemeController>();
+    return ListenableBuilder(
+      listenable: themeController,
+      builder: (context, _) => MaterialApp(
+        title: 'WakeLock',
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.darkTheme,
+        home: const AppStartGate(),
+      ),
     );
   }
 }

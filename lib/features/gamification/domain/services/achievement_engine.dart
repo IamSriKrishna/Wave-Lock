@@ -1,4 +1,3 @@
-
 import '../entities/achievement_entity.dart';
 import '../entities/user_progress_entity.dart';
 
@@ -101,23 +100,18 @@ class AchievementEngine {
     ),
   ];
 
-  List<String> checkAchievements({
-    required UserProgressEntity progress,
-  }) {
+  List<String> checkAchievements({required UserProgressEntity progress}) {
     final unlocked = <String>[];
 
     // Count unique rewarded habit completions.
     final completedHabits = progress.rewardedHabitCompletionIds
         .where(
-          (id) =>
-              id.startsWith('habit_') &&
-              !id.startsWith('habit_streak_'),
+          (id) => id.startsWith('habit_') && !id.startsWith('habit_streak_'),
         )
         .length;
 
     // Check whether any habit has received its 7-day streak reward.
-    final hasSevenDayHabitStreak =
-        progress.rewardedHabitCompletionIds.any(
+    final hasSevenDayHabitStreak = progress.rewardedHabitCompletionIds.any(
       (id) => id.startsWith('habit_streak_') && id.endsWith('_7'),
     );
 
@@ -127,21 +121,16 @@ class AchievementEngine {
       }
 
       final achieved = switch (achievement.type) {
-        'missions' =>
-          progress.rewardedMissionIds.length >= achievement.target,
+        'missions' => progress.rewardedMissionIds.length >= achievement.target,
 
         // Use longest streak so historical achievements remain unlocked.
-        'streak' =>
-          progress.longestStreak >= achievement.target,
+        'streak' => progress.longestStreak >= achievement.target,
 
-        'xp' =>
-          progress.totalXp >= achievement.target,
+        'xp' => progress.totalXp >= achievement.target,
 
-        'habits' =>
-          completedHabits >= achievement.target,
+        'habits' => completedHabits >= achievement.target,
 
-        'habit_streak' =>
-          hasSevenDayHabitStreak,
+        'habit_streak' => hasSevenDayHabitStreak,
 
         _ => false,
       };

@@ -18,7 +18,7 @@ class AchievementUnlockDialog extends StatelessWidget {
         children: [
           Text(achievement.icon, style: const TextStyle(fontSize: 64)),
           const SizedBox(height: 16),
-          const Text(
+          Text(
             'Achievement Unlocked!',
             textAlign: TextAlign.center,
             style: TextStyle(
@@ -36,12 +36,12 @@ class AchievementUnlockDialog extends StatelessWidget {
           Text(
             achievement.description,
             textAlign: TextAlign.center,
-            style: const TextStyle(color: AppColors.textSecondary),
+            style: TextStyle(color: AppColors.textSecondary),
           ),
           const SizedBox(height: 16),
           Text(
             '+${achievement.bonusXp} Bonus XP',
-            style: const TextStyle(
+            style: TextStyle(
               color: AppColors.primary,
               fontWeight: FontWeight.bold,
               fontSize: 16,

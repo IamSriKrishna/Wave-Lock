@@ -93,7 +93,7 @@ class _PomodoroSettingsPageState extends State<PomodoroSettingsPage> {
       builder: (context, state) {
         if (state.status == PomodoroStatus.loading ||
             state.status == PomodoroStatus.initial) {
-          return const Scaffold(
+          return Scaffold(
             backgroundColor: AppColors.background,
             body: Center(child: CircularProgressIndicator()),
           );
@@ -114,7 +114,7 @@ class _PomodoroSettingsPageState extends State<PomodoroSettingsPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'SESSION DURATIONS',
                     style: TextStyle(
                       color: AppColors.primary,
@@ -153,7 +153,7 @@ class _PomodoroSettingsPageState extends State<PomodoroSettingsPage> {
 
                   const SizedBox(height: 32),
 
-                  const Text(
+                  Text(
                     'AUTOMATION',
                     style: TextStyle(
                       color: AppColors.primary,
@@ -169,7 +169,7 @@ class _PomodoroSettingsPageState extends State<PomodoroSettingsPage> {
                       'Auto-start breaks',
                       style: TextStyle(color: Colors.white),
                     ),
-                    subtitle: const Text(
+                    subtitle: Text(
                       'Start the next break automatically',
                       style: TextStyle(color: AppColors.textSecondary),
                     ),
@@ -186,7 +186,7 @@ class _PomodoroSettingsPageState extends State<PomodoroSettingsPage> {
                       'Auto-start focus',
                       style: TextStyle(color: Colors.white),
                     ),
-                    subtitle: const Text(
+                    subtitle: Text(
                       'Start the next focus session automatically',
                       style: TextStyle(color: AppColors.textSecondary),
                     ),

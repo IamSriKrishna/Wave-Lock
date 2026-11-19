@@ -41,9 +41,9 @@ class DashboardHabitCard extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  const Icon(Icons.track_changes, color: AppColors.primary),
+                  Icon(Icons.track_changes, color: AppColors.primary),
                   const SizedBox(width: 10),
-                  const Expanded(
+                  Expanded(
                     child: Text(
                       'Daily Habits',
                       style: TextStyle(
@@ -54,7 +54,7 @@ class DashboardHabitCard extends StatelessWidget {
                   ),
                   Text(
                     '$completedCount/$totalCount',
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: AppColors.primary,
                       fontWeight: FontWeight.bold,
                     ),
@@ -77,7 +77,7 @@ class DashboardHabitCard extends StatelessWidget {
                 style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
               ),
               const SizedBox(height: 8),
-              const Row(
+              Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   Text(

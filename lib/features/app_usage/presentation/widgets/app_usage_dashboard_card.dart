@@ -93,7 +93,7 @@ class _AppUsageDashboardCardState extends State<AppUsageDashboardCard>
         children: [
           Row(
             children: [
-              const Icon(Icons.bar_chart_rounded, color: AppColors.primary),
+              Icon(Icons.bar_chart_rounded, color: AppColors.primary),
               const SizedBox(width: 10),
               const Expanded(
                 child: Text(
@@ -109,7 +109,7 @@ class _AppUsageDashboardCardState extends State<AppUsageDashboardCard>
             ],
           ),
           const SizedBox(height: 4),
-          const Text(
+          Text(
             'Screen time across your apps, by day',
             style: TextStyle(color: AppColors.textSecondary),
           ),
@@ -146,7 +146,7 @@ class _AppUsageDashboardCardState extends State<AppUsageDashboardCard>
 
   Widget _usageContent(AppUsageSnapshot snapshot) {
     if (snapshot.days.isEmpty) {
-      return const Text(
+      return Text(
         'No app usage data is available yet.',
         style: TextStyle(color: AppColors.textSecondary),
       );
@@ -239,7 +239,7 @@ class _AppUsageDashboardCardState extends State<AppUsageDashboardCard>
         ),
         const SizedBox(height: 10),
         if (sortedApps.isEmpty)
-          const Text(
+          Text(
             'No usage recorded for this day.',
             style: TextStyle(color: AppColors.textSecondary),
           )
@@ -261,7 +261,7 @@ class _AppUsageDashboardCardState extends State<AppUsageDashboardCard>
                       const SizedBox(width: 12),
                       Text(
                         _formatDuration(app.duration),
-                        style: const TextStyle(color: AppColors.textSecondary),
+                        style: TextStyle(color: AppColors.textSecondary),
                       ),
                     ],
                   ),
@@ -299,7 +299,7 @@ class _Message extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(message, style: const TextStyle(color: AppColors.textSecondary)),
+        Text(message, style: TextStyle(color: AppColors.textSecondary)),
         if (actionLabel != null && onPressed != null) ...[
           const SizedBox(height: 12),
           OutlinedButton(onPressed: onPressed, child: Text(actionLabel!)),

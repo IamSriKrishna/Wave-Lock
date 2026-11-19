@@ -46,11 +46,7 @@ class _AppSelectionPageState extends State<AppSelectionPage> {
 
       setState(() {
         _apps = apps
-            .where(
-              (app) =>
-                
-                  app.packageName != 'com.wakelock.wakelock',
-            )
+            .where((app) => app.packageName != 'com.wakelock.wakelock')
             .toList();
 
         _isLoading = false;
@@ -106,7 +102,7 @@ class _AppSelectionPageState extends State<AppSelectionPage> {
             onPressed: () {
               Navigator.pop(context, _selectedPackages.toList());
             },
-            child: const Text(
+            child: Text(
               'Done',
               style: TextStyle(
                 color: AppColors.primary,
@@ -130,11 +126,8 @@ class _AppSelectionPageState extends State<AppSelectionPage> {
               style: const TextStyle(color: Colors.white),
               decoration: InputDecoration(
                 hintText: 'Search installed apps',
-                hintStyle: const TextStyle(color: AppColors.textSecondary),
-                prefixIcon: const Icon(
-                  Icons.search,
-                  color: AppColors.textSecondary,
-                ),
+                hintStyle: TextStyle(color: AppColors.textSecondary),
+                prefixIcon: Icon(Icons.search, color: AppColors.textSecondary),
                 filled: true,
                 fillColor: AppColors.surface,
                 border: OutlineInputBorder(
@@ -160,7 +153,7 @@ class _AppSelectionPageState extends State<AppSelectionPage> {
                 const Spacer(),
                 Text(
                   '${_selectedPackages.length} selected',
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppColors.primary,
                     fontWeight: FontWeight.w600,
                   ),
@@ -206,9 +199,7 @@ class _AppSelectionPageState extends State<AppSelectionPage> {
 
   Widget _buildContent(List<InstalledAppEntity> apps) {
     if (_isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(color: AppColors.primary),
-      );
+      return Center(child: CircularProgressIndicator(color: AppColors.primary));
     }
 
     if (_errorMessage != null) {
@@ -248,7 +239,7 @@ class _AppSelectionPageState extends State<AppSelectionPage> {
     }
 
     if (apps.isEmpty) {
-      return const Center(
+      return Center(
         child: Text(
           'No matching apps found',
           style: TextStyle(color: AppColors.textSecondary),
@@ -274,7 +265,7 @@ class _AppSelectionPageState extends State<AppSelectionPage> {
             backgroundColor: AppColors.primary.withValues(alpha: 0.15),
             child: Text(
               app.appName.isNotEmpty ? app.appName[0].toUpperCase() : '?',
-              style: const TextStyle(
+              style: TextStyle(
                 color: AppColors.primary,
                 fontWeight: FontWeight.bold,
               ),
@@ -291,10 +282,7 @@ class _AppSelectionPageState extends State<AppSelectionPage> {
             app.packageName,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              color: AppColors.textSecondary,
-              fontSize: 11,
-            ),
+            style: TextStyle(color: AppColors.textSecondary, fontSize: 11),
           ),
           trailing: Checkbox(
             value: isSelected,

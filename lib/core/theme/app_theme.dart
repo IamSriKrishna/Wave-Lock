@@ -11,14 +11,14 @@ class AppTheme {
       scaffoldBackgroundColor: AppColors.background,
       primaryColor: AppColors.primary,
 
-      colorScheme: const ColorScheme.dark(
+      colorScheme: ColorScheme.dark(
         primary: AppColors.primary,
         secondary: AppColors.secondary,
         surface: AppColors.surface,
         error: AppColors.danger,
       ),
 
-      appBarTheme: const AppBarTheme(
+      appBarTheme: AppBarTheme(
         backgroundColor: AppColors.background,
         elevation: 0,
         centerTitle: false,

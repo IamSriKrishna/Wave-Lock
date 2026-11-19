@@ -28,7 +28,7 @@ class AppUsagePage extends StatelessWidget {
           const SizedBox(height: 16),
           Card(
             child: ListTile(
-              leading: const Icon(
+              leading: Icon(
                 Icons.emoji_events_outlined,
                 color: AppColors.primary,
               ),

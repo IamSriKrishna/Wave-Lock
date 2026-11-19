@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -23,11 +22,7 @@ class OnboardingPage extends StatelessWidget {
     'Personal Development',
   ];
 
-  static const _experience = [
-    'Beginner',
-    'Intermediate',
-    'Advanced',
-  ];
+  static const _experience = ['Beginner', 'Intermediate', 'Advanced'];
 
   static const _availability = {
     '1 hour': 60,
@@ -45,9 +40,7 @@ class OnboardingPage extends StatelessWidget {
         listener: (context, state) {
           if (state.status == OnboardingStatus.success) {
             Navigator.of(context).pushReplacement(
-              MaterialPageRoute(
-                builder: (_) => const DashboardPage(),
-              ),
+              MaterialPageRoute(builder: (_) => const DashboardPage()),
             );
           }
         },
@@ -66,10 +59,7 @@ class OnboardingPage extends StatelessWidget {
 
                     Expanded(
                       child: SingleChildScrollView(
-                        child: _buildStep(
-                          context,
-                          state,
-                        ),
+                        child: _buildStep(context, state),
                       ),
                     ),
 
@@ -85,11 +75,7 @@ class OnboardingPage extends StatelessWidget {
                         ),
                       ),
 
-                    _buildNavigation(
-                      context,
-                      bloc,
-                      state,
-                    ),
+                    _buildNavigation(context, bloc, state),
                   ],
                 ),
               ),
@@ -106,25 +92,16 @@ class OnboardingPage extends StatelessWidget {
       children: [
         Row(
           children: [
-            const Icon(
-              Icons.bolt_rounded,
-              color: AppColors.primary,
-              size: 30,
-            ),
+            Icon(Icons.bolt_rounded, color: AppColors.primary, size: 30),
             const SizedBox(width: 8),
             const Text(
               'WakeLock',
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
             ),
             const Spacer(),
             Text(
               '${state.currentStep + 1} / 6',
-              style: const TextStyle(
-                color: AppColors.textSecondary,
-              ),
+              style: TextStyle(color: AppColors.textSecondary),
             ),
           ],
         ),
@@ -142,10 +119,7 @@ class OnboardingPage extends StatelessWidget {
     );
   }
 
-  Widget _buildStep(
-    BuildContext context,
-    OnboardingState state,
-  ) {
+  Widget _buildStep(BuildContext context, OnboardingState state) {
     switch (state.currentStep) {
       case 0:
         return _nameStep(context, state);
@@ -170,15 +144,12 @@ class OnboardingPage extends StatelessWidget {
       children: [
         Text(
           title,
-          style: const TextStyle(
-            fontSize: 27,
-            fontWeight: FontWeight.bold,
-          ),
+          style: const TextStyle(fontSize: 27, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 10),
         Text(
           subtitle,
-          style: const TextStyle(
+          style: TextStyle(
             color: AppColors.textSecondary,
             fontSize: 14,
             height: 1.5,
@@ -189,10 +160,7 @@ class OnboardingPage extends StatelessWidget {
     );
   }
 
-  Widget _nameStep(
-    BuildContext context,
-    OnboardingState state,
-  ) {
+  Widget _nameStep(BuildContext context, OnboardingState state) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -202,9 +170,7 @@ class OnboardingPage extends StatelessWidget {
         ),
         TextField(
           onChanged: (value) {
-            context.read<OnboardingBloc>().add(
-              NameChanged(value),
-            );
+            context.read<OnboardingBloc>().add(NameChanged(value));
           },
           decoration: const InputDecoration(
             hintText: 'Enter your name',
@@ -221,10 +187,7 @@ class OnboardingPage extends StatelessWidget {
     );
   }
 
-  Widget _goalsStep(
-    BuildContext context,
-    OnboardingState state,
-  ) {
+  Widget _goalsStep(BuildContext context, OnboardingState state) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -242,9 +205,7 @@ class OnboardingPage extends StatelessWidget {
               label: Text(goal),
               selected: selected,
               showCheckmark: true,
-              selectedColor: AppColors.primary.withValues(
-                alpha: 0.2,
-              ),
+              selectedColor: AppColors.primary.withValues(alpha: 0.2),
               checkmarkColor: AppColors.primary,
               onSelected: (value) {
                 final updated = [...state.goals];
@@ -255,9 +216,7 @@ class OnboardingPage extends StatelessWidget {
                   updated.remove(goal);
                 }
 
-                context.read<OnboardingBloc>().add(
-                  GoalsChanged(updated),
-                );
+                context.read<OnboardingBloc>().add(GoalsChanged(updated));
               },
             );
           }).toList(),
@@ -265,18 +224,13 @@ class OnboardingPage extends StatelessWidget {
         const SizedBox(height: 20),
         Text(
           '${state.goals.length} goals selected',
-          style: const TextStyle(
-            color: AppColors.primary,
-          ),
+          style: TextStyle(color: AppColors.primary),
         ),
       ],
     );
   }
 
-  Widget _experienceStep(
-    BuildContext context,
-    OnboardingState state,
-  ) {
+  Widget _experienceStep(BuildContext context, OnboardingState state) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -297,9 +251,7 @@ class OnboardingPage extends StatelessWidget {
             },
             selected: selected,
             onTap: () {
-              context.read<OnboardingBloc>().add(
-                ExperienceChanged(value),
-              );
+              context.read<OnboardingBloc>().add(ExperienceChanged(value));
             },
           );
         }),
@@ -307,10 +259,7 @@ class OnboardingPage extends StatelessWidget {
     );
   }
 
-  Widget _availabilityStep(
-    BuildContext context,
-    OnboardingState state,
-  ) {
+  Widget _availabilityStep(BuildContext context, OnboardingState state) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -322,8 +271,7 @@ class OnboardingPage extends StatelessWidget {
           return _selectionCard(
             title: entry.key,
             subtitle: 'Available daily',
-            selected:
-                state.dailyAvailableMinutes == entry.value,
+            selected: state.dailyAvailableMinutes == entry.value,
             onTap: () {
               context.read<OnboardingBloc>().add(
                 AvailabilityChanged(entry.value),
@@ -335,10 +283,7 @@ class OnboardingPage extends StatelessWidget {
     );
   }
 
-  Widget _workingHoursStep(
-    BuildContext context,
-    OnboardingState state,
-  ) {
+  Widget _workingHoursStep(BuildContext context, OnboardingState state) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -350,22 +295,14 @@ class OnboardingPage extends StatelessWidget {
           context,
           title: 'Start time',
           value: state.preferredStartTime,
-          onTap: () => _selectTime(
-            context,
-            state.preferredStartTime,
-            true,
-          ),
+          onTap: () => _selectTime(context, state.preferredStartTime, true),
         ),
         const SizedBox(height: 16),
         _timeCard(
           context,
           title: 'End time',
           value: state.preferredEndTime,
-          onTap: () => _selectTime(
-            context,
-            state.preferredEndTime,
-            false,
-          ),
+          onTap: () => _selectTime(context, state.preferredEndTime, false),
         ),
       ],
     );
@@ -383,10 +320,7 @@ class OnboardingPage extends StatelessWidget {
       minute: int.parse(parts[1]),
     );
 
-    final picked = await showTimePicker(
-      context: context,
-      initialTime: initial,
-    );
+    final picked = await showTimePicker(context: context, initialTime: initial);
 
     if (picked == null || !context.mounted) return;
 
@@ -399,12 +333,8 @@ class OnboardingPage extends StatelessWidget {
 
     context.read<OnboardingBloc>().add(
       WorkingHoursChanged(
-        startTime: isStart
-            ? format(picked)
-            : state.preferredStartTime,
-        endTime: isStart
-            ? state.preferredEndTime
-            : format(picked),
+        startTime: isStart ? format(picked) : state.preferredStartTime,
+        endTime: isStart ? state.preferredEndTime : format(picked),
       ),
     );
   }
@@ -419,10 +349,7 @@ class OnboardingPage extends StatelessWidget {
         ),
         _reviewItem('Name', state.name),
         _reviewItem('Goals', state.goals.join(', ')),
-        _reviewItem(
-          'Experience',
-          state.experienceLevel,
-        ),
+        _reviewItem('Experience', state.experienceLevel),
         _reviewItem(
           'Daily availability',
           '${state.dailyAvailableMinutes ~/ 60}h '
@@ -462,9 +389,7 @@ class OnboardingPage extends StatelessWidget {
                 : AppColors.surface,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: selected
-                  ? AppColors.primary
-                  : AppColors.surfaceLight,
+              color: selected ? AppColors.primary : AppColors.surfaceLight,
             ),
           ),
           child: Row(
@@ -475,14 +400,12 @@ class OnboardingPage extends StatelessWidget {
                   children: [
                     Text(
                       title,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                      ),
+                      style: const TextStyle(fontWeight: FontWeight.w600),
                     ),
                     const SizedBox(height: 5),
                     Text(
                       subtitle,
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: AppColors.textSecondary,
                         fontSize: 12,
                       ),
@@ -491,12 +414,8 @@ class OnboardingPage extends StatelessWidget {
                 ),
               ),
               Icon(
-                selected
-                    ? Icons.radio_button_checked
-                    : Icons.radio_button_off,
-                color: selected
-                    ? AppColors.primary
-                    : AppColors.textSecondary,
+                selected ? Icons.radio_button_checked : Icons.radio_button_off,
+                color: selected ? AppColors.primary : AppColors.textSecondary,
               ),
             ],
           ),
@@ -520,21 +439,16 @@ class OnboardingPage extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppColors.surface,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: AppColors.surfaceLight,
-          ),
+          border: Border.all(color: AppColors.surfaceLight),
         ),
         child: Row(
           children: [
-            const Icon(
-              Icons.access_time,
-              color: AppColors.primary,
-            ),
+            Icon(Icons.access_time, color: AppColors.primary),
             const SizedBox(width: 14),
             Expanded(child: Text(title)),
             Text(
               value,
-              style: const TextStyle(
+              style: TextStyle(
                 color: AppColors.primary,
                 fontWeight: FontWeight.bold,
                 fontSize: 18,
@@ -562,36 +476,25 @@ class OnboardingPage extends StatelessWidget {
         children: [
           Text(
             title,
-            style: const TextStyle(
+            style: TextStyle(
               color: AppColors.textSecondary,
               fontSize: 12,
             ),
           ),
           const SizedBox(height: 6),
-          Text(
-            value,
-            style: const TextStyle(
-              fontWeight: FontWeight.w600,
-            ),
-          ),
+          Text(value, style: const TextStyle(fontWeight: FontWeight.w600)),
         ],
       ),
     );
   }
 
-  Widget _infoCard(
-    IconData icon,
-    String title,
-    String description,
-  ) {
+  Widget _infoCard(IconData icon, String title, String description) {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: AppColors.primary.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: AppColors.primary.withValues(alpha: 0.25),
-        ),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.25)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -604,14 +507,12 @@ class OnboardingPage extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 6),
                 Text(
                   description,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppColors.textSecondary,
                     fontSize: 13,
                     height: 1.5,
@@ -637,9 +538,7 @@ class OnboardingPage extends StatelessWidget {
       children: [
         if (state.currentStep > 0)
           OutlinedButton(
-            onPressed: isSaving
-                ? null
-                : () => bloc.add(PreviousStepPressed()),
+            onPressed: isSaving ? null : () => bloc.add(PreviousStepPressed()),
             child: const Text('Back'),
           ),
         const SizedBox(width: 12),
@@ -657,9 +556,7 @@ class OnboardingPage extends StatelessWidget {
             style: FilledButton.styleFrom(
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.black,
-              padding: const EdgeInsets.symmetric(
-                vertical: 16,
-              ),
+              padding: const EdgeInsets.symmetric(vertical: 16),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(14),
               ),
@@ -668,15 +565,11 @@ class OnboardingPage extends StatelessWidget {
                 ? const SizedBox(
                     width: 20,
                     height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                    ),
+                    child: CircularProgressIndicator(strokeWidth: 2),
                   )
                 : Text(
                     isLast ? 'Create my profile' : 'Continue',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
           ),
         ),
