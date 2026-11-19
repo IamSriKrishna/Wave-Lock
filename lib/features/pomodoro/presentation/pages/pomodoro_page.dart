@@ -5,6 +5,7 @@ import '../../../../core/services/strict_mode_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../injection_container.dart';
 import '../../domain/entities/pomodoro_session_entity.dart';
+import '../../../motivational_quotes/presentation/widgets/motivational_quote_dialog.dart';
 import '../bloc/pomodoro_bloc.dart';
 import '../bloc/pomodoro_event.dart';
 import '../bloc/pomodoro_state.dart';
@@ -152,138 +153,151 @@ class _PomodoroView extends StatelessWidget {
           ),
         ],
       ),
-      body: BlocBuilder<PomodoroBloc, PomodoroState>(
-        builder: (context, state) {
-          if (state.status == PomodoroStatus.loading ||
-              state.status == PomodoroStatus.initial) {
-            return const Center(child: CircularProgressIndicator());
-          }
+      body: BlocListener<PomodoroBloc, PomodoroState>(
+        listenWhen: (previous, current) =>
+            previous.status == PomodoroStatus.ready &&
+            current.status == PomodoroStatus.ready &&
+            current.history.length > previous.history.length,
+        listener: (context, state) async {
+          await showMotivationalQuoteDialog(
+            context,
+            title: 'Pomodoro complete!',
+          );
+        },
+        child: BlocBuilder<PomodoroBloc, PomodoroState>(
+          builder: (context, state) {
+            if (state.status == PomodoroStatus.loading ||
+                state.status == PomodoroStatus.initial) {
+              return const Center(child: CircularProgressIndicator());
+            }
 
-          if (state.status == PomodoroStatus.failure) {
-            return Center(
-              child: Text(
-                state.errorMessage ?? 'Unable to load timer',
-                style: const TextStyle(color: Colors.white),
-              ),
-            );
-          }
+            if (state.status == PomodoroStatus.failure) {
+              return Center(
+                child: Text(
+                  state.errorMessage ?? 'Unable to load timer',
+                  style: const TextStyle(color: Colors.white),
+                ),
+              );
+            }
 
-          final session = state.session;
+            final session = state.session;
 
-          if (session == null) {
-            return const Center(
-              child: Text(
-                'No timer session available',
-                style: TextStyle(color: Colors.white),
-              ),
-            );
-          }
+            if (session == null) {
+              return const Center(
+                child: Text(
+                  'No timer session available',
+                  style: TextStyle(color: Colors.white),
+                ),
+              );
+            }
 
-          final bloc = context.read<PomodoroBloc>();
+            final bloc = context.read<PomodoroBloc>();
 
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              children: [
-                const SizedBox(height: 20),
-                Text(
-                  _sessionTitle(session.type),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 26,
-                    fontWeight: FontWeight.bold,
+            return SingleChildScrollView(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                children: [
+                  const SizedBox(height: 20),
+                  Text(
+                    _sessionTitle(session.type),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 26,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 30),
+                  const SizedBox(height: 30),
 
-                Wrap(
-                  alignment: WrapAlignment.center,
-                  spacing: 8,
-                  children: [
-                    _SessionTab(
-                      label: 'Focus',
-                      selected: session.type == PomodoroSessionType.focus,
-                      onTap: () => _selectType(
-                        context,
-                        state,
-                        PomodoroSessionType.focus,
-                      ),
-                    ),
-                    _SessionTab(
-                      label: 'Short Break',
-                      selected: session.type == PomodoroSessionType.shortBreak,
-                      onTap: () => _selectType(
-                        context,
-                        state,
-                        PomodoroSessionType.shortBreak,
-                      ),
-                    ),
-                    _SessionTab(
-                      label: 'Long Break',
-                      selected: session.type == PomodoroSessionType.longBreak,
-                      onTap: () => _selectType(
-                        context,
-                        state,
-                        PomodoroSessionType.longBreak,
-                      ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 35),
-
-                PomodoroTimerCard(
-                  remainingSeconds: session.remainingSeconds,
-                  durationSeconds: session.durationSeconds,
-                  progress: session.progress,
-                ),
-
-                const SizedBox(height: 35),
-
-                PomodoroControls(
-                  isRunning: state.isRunning,
-                  isPaused: state.isPaused,
-                  onStart: () => _startFocus(context, state, resume: false),
-                  onPause: () => bloc.add(const PausePomodoro()),
-                  onResume: () => _startFocus(context, state, resume: true),
-                  onReset: () => bloc.add(const ResetPomodoro()),
-                ),
-
-                const SizedBox(height: 35),
-
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: AppColors.surface,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Column(
+                  Wrap(
+                    alignment: WrapAlignment.center,
+                    spacing: 8,
                     children: [
-                      const Text(
-                        'COMPLETED FOCUS SESSIONS',
-                        style: TextStyle(
-                          color: AppColors.textSecondary,
-                          fontSize: 12,
-                          letterSpacing: 1,
+                      _SessionTab(
+                        label: 'Focus',
+                        selected: session.type == PomodoroSessionType.focus,
+                        onTap: () => _selectType(
+                          context,
+                          state,
+                          PomodoroSessionType.focus,
                         ),
                       ),
-                      const SizedBox(height: 10),
-                      Text(
-                        '${session.completedFocusSessions}',
-                        style: const TextStyle(
-                          color: AppColors.primary,
-                          fontSize: 32,
-                          fontWeight: FontWeight.bold,
+                      _SessionTab(
+                        label: 'Short Break',
+                        selected:
+                            session.type == PomodoroSessionType.shortBreak,
+                        onTap: () => _selectType(
+                          context,
+                          state,
+                          PomodoroSessionType.shortBreak,
+                        ),
+                      ),
+                      _SessionTab(
+                        label: 'Long Break',
+                        selected: session.type == PomodoroSessionType.longBreak,
+                        onTap: () => _selectType(
+                          context,
+                          state,
+                          PomodoroSessionType.longBreak,
                         ),
                       ),
                     ],
                   ),
-                ),
-              ],
-            ),
-          );
-        },
+
+                  const SizedBox(height: 35),
+
+                  PomodoroTimerCard(
+                    remainingSeconds: session.remainingSeconds,
+                    durationSeconds: session.durationSeconds,
+                    progress: session.progress,
+                  ),
+
+                  const SizedBox(height: 35),
+
+                  PomodoroControls(
+                    isRunning: state.isRunning,
+                    isPaused: state.isPaused,
+                    onStart: () => _startFocus(context, state, resume: false),
+                    onPause: () => bloc.add(const PausePomodoro()),
+                    onResume: () => _startFocus(context, state, resume: true),
+                    onReset: () => bloc.add(const ResetPomodoro()),
+                  ),
+
+                  const SizedBox(height: 35),
+
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: AppColors.surface,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Column(
+                      children: [
+                        const Text(
+                          'COMPLETED FOCUS SESSIONS',
+                          style: TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 12,
+                            letterSpacing: 1,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          '${session.completedFocusSessions}',
+                          style: const TextStyle(
+                            color: AppColors.primary,
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
       ),
     );
   }

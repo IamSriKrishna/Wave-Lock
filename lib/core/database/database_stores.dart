@@ -20,6 +20,8 @@ class DatabaseStores {
   static final habits = stringMapStoreFactory.store('habits_store');
 
   static final settings = stringMapStoreFactory.store('settings_store');
-  
+
   static final gamification = stringMapStoreFactory.store('gamification_store');
+
+  static final dailyGrowth = stringMapStoreFactory.store('daily_growth_store');
 }

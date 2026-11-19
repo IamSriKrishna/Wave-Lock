@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../motivational_quotes/presentation/widgets/motivational_quote_dialog.dart';
 import '../../../../injection_container.dart';
 import '../../domain/entities/mission_entity.dart';
 import '../bloc/mission_bloc.dart';
@@ -19,10 +20,36 @@ class DailyMissionsPage extends StatelessWidget {
       create: (_) => getIt<MissionBloc>()..add(const LoadDailyMissions()),
       child: BlocListener<MissionBloc, MissionState>(
         listenWhen: (previous, current) =>
-            current.newlyUnlockedAchievements.isNotEmpty &&
-            previous.newlyUnlockedAchievements !=
-                current.newlyUnlockedAchievements,
+            (current.newlyUnlockedAchievements.isNotEmpty &&
+                previous.newlyUnlockedAchievements !=
+                    current.newlyUnlockedAchievements) ||
+            (current.startedMissionId != null &&
+                previous.startedMissionId != current.startedMissionId) ||
+            (current.completedMissionId != null &&
+                previous.completedMissionId != current.completedMissionId),
         listener: (context, state) async {
+          if (state.startedMissionId != null) {
+            final mission = state.missions.firstWhere(
+              (item) => item.id == state.startedMissionId,
+            );
+            await showMotivationalQuoteDialog(
+              context,
+              title: 'Mission started: ${mission.title}',
+            );
+            if (!context.mounted) return;
+          }
+
+          if (state.completedMissionId != null) {
+            final mission = state.missions.firstWhere(
+              (item) => item.id == state.completedMissionId,
+            );
+            await showMotivationalQuoteDialog(
+              context,
+              title: 'Mission completed: ${mission.title}',
+            );
+            if (!context.mounted) return;
+          }
+
           for (final id in state.newlyUnlockedAchievements) {
             final achievement = AchievementEngine.achievements.firstWhere(
               (item) => item.id == id,
@@ -44,6 +71,20 @@ class DailyMissionsPage extends StatelessWidget {
       ),
     );
   }
+}
+
+Future<void> _promptBeforeMissionAction(
+  BuildContext context,
+  String action,
+  String missionTitle,
+  VoidCallback onContinue,
+) async {
+  final shouldContinue = await showMotivationalQuoteDialog(
+    context,
+    title: 'Ready to $action $missionTitle?',
+    canCancel: true,
+  );
+  if (shouldContinue && context.mounted) onContinue();
 }
 
 class _DailyMissionsView extends StatelessWidget {
@@ -372,7 +413,12 @@ class _MissionCard extends StatelessWidget {
                   width: double.infinity,
                   child: FilledButton.icon(
                     onPressed: () {
-                      bloc.add(StartMission(mission.id));
+                      _promptBeforeMissionAction(
+                        context,
+                        'start',
+                        mission.title,
+                        () => bloc.add(StartMission(mission.id)),
+                      );
                     },
                     icon: const Icon(Icons.play_arrow),
                     label: const Text('Start Mission'),
@@ -395,7 +441,12 @@ class _MissionCard extends StatelessWidget {
                     Expanded(
                       child: FilledButton.icon(
                         onPressed: () {
-                          bloc.add(CompleteMission(mission.id));
+                          _promptBeforeMissionAction(
+                            context,
+                            'complete',
+                            mission.title,
+                            () => bloc.add(CompleteMission(mission.id)),
+                          );
                         },
                         icon: const Icon(Icons.check),
                         label: const Text('Complete'),
@@ -410,7 +461,12 @@ class _MissionCard extends StatelessWidget {
                     Expanded(
                       child: FilledButton.icon(
                         onPressed: () {
-                          bloc.add(ResumeMission(mission.id));
+                          _promptBeforeMissionAction(
+                            context,
+                            'resume',
+                            mission.title,
+                            () => bloc.add(ResumeMission(mission.id)),
+                          );
                         },
                         icon: const Icon(Icons.play_arrow),
                         label: const Text('Resume'),
@@ -420,7 +476,12 @@ class _MissionCard extends StatelessWidget {
                     Expanded(
                       child: OutlinedButton.icon(
                         onPressed: () {
-                          bloc.add(CompleteMission(mission.id));
+                          _promptBeforeMissionAction(
+                            context,
+                            'complete',
+                            mission.title,
+                            () => bloc.add(CompleteMission(mission.id)),
+                          );
                         },
                         icon: const Icon(Icons.check),
                         label: const Text('Complete'),

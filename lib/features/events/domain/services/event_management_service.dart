@@ -60,6 +60,18 @@ class EventManagementService {
   }
 
   EventEntity toggleCompletion(EventEntity event) {
-    return event.copyWith(isCompleted: !event.isCompleted);
+    final isCompleted = !event.isCompleted;
+    return event.copyWith(
+      isCompleted: isCompleted,
+      isStarted: isCompleted ? false : event.isStarted,
+    );
+  }
+
+  EventEntity startEvent(EventEntity event) {
+    if (event.isCompleted) {
+      throw StateError('A completed event cannot be started.');
+    }
+
+    return event.copyWith(isStarted: true);
   }
 }

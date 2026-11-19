@@ -16,6 +16,7 @@ class EventEntity extends Equatable {
   final int? reminderMinutesBefore;
 
   final bool isCompleted;
+  final bool isStarted;
   final DateTime createdAt;
 
   const EventEntity({
@@ -29,6 +30,7 @@ class EventEntity extends Equatable {
     this.recurrenceEndDate,
     this.reminderMinutesBefore,
     this.isCompleted = false,
+    this.isStarted = false,
     required this.createdAt,
   });
 
@@ -46,6 +48,7 @@ class EventEntity extends Equatable {
     DateTime? recurrenceEndDate,
     int? reminderMinutesBefore,
     bool? isCompleted,
+    bool? isStarted,
     bool clearStartTime = false,
     bool clearEndTime = false,
     bool clearRecurrenceEndDate = false,
@@ -70,6 +73,7 @@ class EventEntity extends Equatable {
           ? null
           : reminderMinutesBefore ?? this.reminderMinutesBefore,
       isCompleted: isCompleted ?? this.isCompleted,
+      isStarted: isStarted ?? this.isStarted,
       createdAt: createdAt,
     );
   }
@@ -86,6 +90,7 @@ class EventEntity extends Equatable {
     recurrenceEndDate,
     reminderMinutesBefore,
     isCompleted,
+    isStarted,
     createdAt,
   ];
 }

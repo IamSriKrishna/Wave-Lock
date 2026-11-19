@@ -49,7 +49,12 @@ class MissionBloc extends Bloc<MissionEvent, MissionState> {
     on<CompleteMission>(_onComplete);
     on<MissionClockTick>(_onClockTick);
     on<ClearNewlyUnlockedAchievements>((event, emit) {
-      emit(state.copyWith(clearNewlyUnlockedAchievements: true));
+      emit(
+        state.copyWith(
+          clearNewlyUnlockedAchievements: true,
+          clearMotivationalPrompts: true,
+        ),
+      );
     });
   }
 
@@ -213,7 +218,7 @@ class MissionBloc extends Bloc<MissionEvent, MissionState> {
       if (mission.status != 'accepted') return mission;
 
       return mission.copyWith(status: 'inProgress', startedAt: DateTime.now());
-    });
+    }, startedMissionId: event.missionId);
   }
 
   Future<void> _onPause(PauseMission event, Emitter<MissionState> emit) async {
@@ -238,7 +243,7 @@ class MissionBloc extends Bloc<MissionEvent, MissionState> {
       if (mission.status != 'paused') return mission;
 
       return mission.copyWith(status: 'inProgress', startedAt: DateTime.now());
-    });
+    }, startedMissionId: event.missionId);
   }
 
   Future<void> _onComplete(
@@ -313,6 +318,7 @@ class MissionBloc extends Bloc<MissionEvent, MissionState> {
         missions: updatedMissions,
         clockNow: now,
         newlyUnlockedAchievements: newlyUnlocked,
+        completedMissionId: completedMission.id,
       ),
     );
 
@@ -322,8 +328,9 @@ class MissionBloc extends Bloc<MissionEvent, MissionState> {
   Future<void> _changeMission(
     String missionId,
     Emitter<MissionState> emit,
-    MissionEntity Function(MissionEntity) update,
-  ) async {
+    MissionEntity Function(MissionEntity) update, {
+    String? startedMissionId,
+  }) async {
     final updated = state.missions.map((mission) {
       if (mission.id == missionId) {
         return update(mission);
@@ -339,6 +346,7 @@ class MissionBloc extends Bloc<MissionEvent, MissionState> {
           missions: updated,
           status: MissionStatus.ready,
           clockNow: DateTime.now(),
+          startedMissionId: startedMissionId,
           clearError: true,
         ),
       );

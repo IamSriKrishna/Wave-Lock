@@ -12,6 +12,7 @@ class EventModel extends EventEntity {
     super.recurrenceEndDate,
     super.reminderMinutesBefore,
     super.isCompleted,
+    super.isStarted,
     required super.createdAt,
   });
 
@@ -27,6 +28,7 @@ class EventModel extends EventEntity {
       recurrenceEndDate: entity.recurrenceEndDate,
       reminderMinutesBefore: entity.reminderMinutesBefore,
       isCompleted: entity.isCompleted,
+      isStarted: entity.isStarted,
       createdAt: entity.createdAt,
     );
   }
@@ -50,6 +52,7 @@ class EventModel extends EventEntity {
             ),
       reminderMinutesBefore: map['reminder_minutes_before'] as int?,
       isCompleted: map['is_completed'] as bool? ?? false,
+      isStarted: map['is_started'] as bool? ?? false,
       createdAt: DateTime.fromMillisecondsSinceEpoch(map['created_at'] as int),
     );
   }
@@ -66,6 +69,7 @@ class EventModel extends EventEntity {
       'recurrence_end_date': recurrenceEndDate?.millisecondsSinceEpoch,
       'reminder_minutes_before': reminderMinutesBefore,
       'is_completed': isCompleted,
+      'is_started': isStarted,
       'created_at': createdAt.millisecondsSinceEpoch,
     };
   }

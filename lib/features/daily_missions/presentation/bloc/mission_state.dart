@@ -10,12 +10,16 @@ class MissionState extends Equatable {
   final String? errorMessage;
   final List<String> newlyUnlockedAchievements;
   final DateTime clockNow;
+  final String? startedMissionId;
+  final String? completedMissionId;
 
   MissionState({
     this.status = MissionStatus.initial,
     this.missions = const [],
     this.errorMessage,
     this.newlyUnlockedAchievements = const [],
+    this.startedMissionId,
+    this.completedMissionId,
     DateTime? clockNow,
   }) : clockNow = clockNow ?? DateTime.now();
 
@@ -46,8 +50,11 @@ class MissionState extends Equatable {
     String? errorMessage,
     DateTime? clockNow,
     List<String>? newlyUnlockedAchievements,
+    String? startedMissionId,
+    String? completedMissionId,
 
     bool clearNewlyUnlockedAchievements = false,
+    bool clearMotivationalPrompts = false,
     bool clearError = false,
   }) {
     return MissionState(
@@ -56,6 +63,12 @@ class MissionState extends Equatable {
       newlyUnlockedAchievements: clearNewlyUnlockedAchievements
           ? const []
           : newlyUnlockedAchievements ?? this.newlyUnlockedAchievements,
+      startedMissionId: clearMotivationalPrompts
+          ? null
+          : startedMissionId ?? this.startedMissionId,
+      completedMissionId: clearMotivationalPrompts
+          ? null
+          : completedMissionId ?? this.completedMissionId,
       errorMessage: clearError ? null : errorMessage ?? this.errorMessage,
       clockNow: clockNow ?? this.clockNow,
     );
@@ -68,5 +81,7 @@ class MissionState extends Equatable {
     errorMessage,
     clockNow,
     newlyUnlockedAchievements,
+    startedMissionId,
+    completedMissionId,
   ];
 }

@@ -1,8 +1,15 @@
+import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
 import 'package:uuid/uuid.dart';
 import 'package:wakelock/core/services/notification_service.dart';
 import 'package:wakelock/core/services/strict_mode_service.dart';
 import 'package:wakelock/features/events/domain/services/event_occurrence_engine.dart';
+import 'package:wakelock/features/app_usage/data/repositories/daily_growth_progress_repository.dart';
+import 'package:wakelock/features/app_usage/domain/services/app_usage_service.dart';
+import 'package:wakelock/features/app_usage/domain/services/daily_growth_plan_generator.dart';
+import 'package:wakelock/features/motivational_quotes/data/datasources/motivational_quote_remote_data_source.dart';
+import 'package:wakelock/features/motivational_quotes/data/repositories/motivational_quote_repository_impl.dart';
+import 'package:wakelock/features/motivational_quotes/domain/repositories/motivational_quote_repository.dart';
 import 'package:wakelock/features/strict_mode/data/repositories/strict_mode_repository_impl.dart';
 import 'package:wakelock/features/strict_mode/domain/repositories/strict_mode_repository.dart';
 import 'package:wakelock/features/strict_mode/domain/services/app_selection_service.dart';
@@ -56,6 +63,34 @@ Future<void> setupDependencies() async {
   getIt.registerLazySingleton<Uuid>(() => const Uuid());
 
   getIt.registerLazySingleton<StrictModeService>(() => StrictModeService());
+
+  getIt.registerLazySingleton<AppUsageService>(() => const AppUsageService());
+  getIt.registerLazySingleton<DailyGrowthPlanGenerator>(
+    () => const DailyGrowthPlanGenerator(),
+  );
+  getIt.registerLazySingleton<DailyGrowthProgressRepository>(
+    () => DailyGrowthProgressRepository(getIt<AppDatabase>()),
+  );
+
+  getIt.registerLazySingleton<Dio>(
+    () => Dio(
+      BaseOptions(
+        baseUrl: 'https://dummyjson.com',
+        connectTimeout: const Duration(seconds: 10),
+        receiveTimeout: const Duration(seconds: 10),
+      ),
+    ),
+  );
+
+  getIt.registerLazySingleton<MotivationalQuoteRemoteDataSource>(
+    () => MotivationalQuoteRemoteDataSource(getIt<Dio>()),
+  );
+
+  getIt.registerLazySingleton<MotivationalQuoteRepository>(
+    () => MotivationalQuoteRepositoryImpl(
+      getIt<MotivationalQuoteRemoteDataSource>(),
+    ),
+  );
 
   // Onboarding
   getIt.registerLazySingleton<UserRepository>(

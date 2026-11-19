@@ -5,6 +5,7 @@ import 'package:wakelock/injection_container.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../domain/entities/event_entity.dart';
+import '../../../motivational_quotes/presentation/widgets/motivational_quote_dialog.dart';
 import '../bloc/event_bloc.dart';
 import '../bloc/event_event.dart';
 import '../bloc/event_state.dart';
@@ -23,6 +24,50 @@ class EventPage extends StatelessWidget {
 
 class _EventView extends StatelessWidget {
   const _EventView();
+
+  Future<void> _runEventAction(
+    BuildContext context,
+    EventEntity event, {
+    required bool start,
+  }) async {
+    final action = start ? 'start' : 'complete';
+    final ready = await showMotivationalQuoteDialog(
+      context,
+      title: 'Ready to $action ${event.title}?',
+      canCancel: true,
+    );
+    if (!ready || !context.mounted) return;
+
+    final bloc = context.read<EventBloc>();
+    final result = bloc.stream.firstWhere((state) {
+      if (state.status == EventStatus.failure) return true;
+
+      final updatedEvent = state.events.where((item) => item.id == event.id);
+      return updatedEvent.isNotEmpty &&
+          (start
+              ? updatedEvent.first.isStarted
+              : updatedEvent.first.isCompleted);
+    });
+
+    bloc.add(start ? StartEvent(event.id) : ToggleEventCompletion(event.id));
+
+    final state = await result;
+    if (!context.mounted) return;
+
+    if (state.status == EventStatus.failure) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(state.errorMessage ?? 'Unable to update event.'),
+        ),
+      );
+      return;
+    }
+
+    await showMotivationalQuoteDialog(
+      context,
+      title: start ? 'Event started!' : 'Event completed!',
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -84,9 +129,12 @@ class _EventView extends StatelessWidget {
               ...upcoming.map(
                 (event) => _EventCard(
                   event: event,
-                  onToggle: () => context.read<EventBloc>().add(
-                    ToggleEventCompletion(event.id),
-                  ),
+                  onStart: () => _runEventAction(context, event, start: true),
+                  onToggle: () => event.isCompleted
+                      ? context.read<EventBloc>().add(
+                          ToggleEventCompletion(event.id),
+                        )
+                      : _runEventAction(context, event, start: false),
                   onDelete: () =>
                       context.read<EventBloc>().add(DeleteEvent(event.id)),
                 ),
@@ -97,6 +145,7 @@ class _EventView extends StatelessWidget {
               ...completed.map(
                 (event) => _EventCard(
                   event: event,
+                  onStart: () {},
                   onToggle: () => context.read<EventBloc>().add(
                     ToggleEventCompletion(event.id),
                   ),
@@ -139,11 +188,13 @@ class _SectionTitle extends StatelessWidget {
 
 class _EventCard extends StatelessWidget {
   final EventEntity event;
+  final VoidCallback onStart;
   final VoidCallback onToggle;
   final VoidCallback onDelete;
 
   const _EventCard({
     required this.event,
+    required this.onStart,
     required this.onToggle,
     required this.onDelete,
   });
@@ -164,16 +215,20 @@ class _EventCard extends StatelessWidget {
         title: Text(event.title, style: const TextStyle(color: Colors.white)),
         subtitle: Text(
           '${date.day}/${date.month}/${date.year}'
-          '${timeMinutes == null ? '' : ' • ${_formatTime(context, timeMinutes)}'}',
+          '${timeMinutes == null ? '' : ' • ${_formatTime(context, timeMinutes)}'}'
+          '${event.isStarted && !event.isCompleted ? ' • Started' : ''}',
           style: const TextStyle(color: Colors.white54),
         ),
         trailing: PopupMenuButton<String>(
           iconColor: Colors.white70,
           onSelected: (value) {
+            if (value == 'start') onStart();
             if (value == 'toggle') onToggle();
             if (value == 'delete') onDelete();
           },
           itemBuilder: (_) => [
+            if (!event.isCompleted && !event.isStarted)
+              const PopupMenuItem(value: 'start', child: Text('Start event')),
             PopupMenuItem(
               value: 'toggle',
               child: Text(event.isCompleted ? 'Undo completion' : 'Complete'),

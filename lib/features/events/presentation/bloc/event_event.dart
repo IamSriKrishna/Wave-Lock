@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 
 import '../../domain/entities/event_entity.dart';
+
 abstract class EventEvent extends Equatable {
   const EventEvent();
 
@@ -68,6 +69,15 @@ class ToggleEventCompletion extends EventEvent {
   final String eventId;
 
   const ToggleEventCompletion(this.eventId);
+
+  @override
+  List<Object?> get props => [eventId];
+}
+
+class StartEvent extends EventEvent {
+  final String eventId;
+
+  const StartEvent(this.eventId);
 
   @override
   List<Object?> get props => [eventId];
