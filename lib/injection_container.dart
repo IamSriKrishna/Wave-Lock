@@ -1,63 +1,106 @@
 import 'package:get_it/get_it.dart';
+import 'package:uuid/uuid.dart';
 import 'package:wakelock/core/services/notification_service.dart';
 import 'package:wakelock/core/services/strict_mode_service.dart';
 import 'package:wakelock/features/events/domain/services/event_occurrence_engine.dart';
+import 'package:wakelock/features/strict_mode/data/repositories/strict_mode_repository_impl.dart';
+import 'package:wakelock/features/strict_mode/domain/repositories/strict_mode_repository.dart';
+import 'package:wakelock/features/strict_mode/domain/services/app_selection_service.dart';
+import 'package:wakelock/features/strict_mode/domain/services/strict_mode_management_service.dart';
+import 'package:wakelock/features/strict_mode/presentation/bloc/strict_mode_bloc.dart';
 
 import 'core/database/app_database.dart';
 
 import 'features/onboarding/data/repositories/user_repository_impl.dart';
 import 'features/onboarding/domain/repositories/user_repository.dart';
 import 'features/onboarding/presentation/bloc/onboarding_bloc.dart';
+
 import 'features/daily_missions/data/repositories/mission_repository_impl.dart';
 import 'features/daily_missions/domain/repositories/mission_repository.dart';
 import 'features/daily_missions/domain/services/mission_recommendation_engine.dart';
-import 'features/gamification/domain/services/progress_reward_engine.dart';
 import 'features/daily_missions/presentation/bloc/mission_bloc.dart';
-import 'features/events/domain/services/event_reminder_scheduler.dart';
-import 'features/habits/domain/services/habit_analytics_engine.dart';
+
 import 'features/gamification/data/repositories/progress_repository_impl.dart';
-import 'features/events/domain/services/event_management_service.dart';
 import 'features/gamification/domain/repositories/progress_repository.dart';
-import 'features/gamification/presentation/bloc/gamification_bloc.dart';
-import 'features/events/presentation/bloc/event_bloc.dart';
-import 'features/pomodoro/data/repositories/pomodoro_repository_impl.dart';
-import 'features/events/domain/repositories/event_repository.dart';
-import 'features/events/data/repositories/event_repository_impl.dart';
-import 'features/pomodoro/domain/repositories/pomodoro_repository.dart';
-import 'features/pomodoro/domain/services/pomodoro_timer_engine.dart';
-import 'features/pomodoro/presentation/bloc/pomodoro_bloc.dart';
+import 'features/gamification/domain/services/progress_reward_engine.dart';
 import 'features/gamification/domain/services/achievement_engine.dart';
-import 'features/pomodoro/data/repositories/pomodoro_settings_repository_impl.dart';
-import 'features/pomodoro/domain/repositories/pomodoro_settings_repository.dart';
-import 'features/habits/domain/repositories/habit_repository.dart';
+import 'features/gamification/presentation/bloc/gamification_bloc.dart';
+
+import 'features/events/data/repositories/event_repository_impl.dart';
+import 'features/events/domain/repositories/event_repository.dart';
+import 'features/events/domain/services/event_reminder_scheduler.dart';
+import 'features/events/domain/services/event_management_service.dart';
+import 'features/events/presentation/bloc/event_bloc.dart';
+
 import 'features/habits/data/repositories/habit_repository_impl.dart';
+import 'features/habits/domain/repositories/habit_repository.dart';
+import 'features/habits/domain/services/habit_analytics_engine.dart';
 import 'features/habits/domain/services/habit_streak_engine.dart';
-import 'features/habits/presentation/bloc/habit_bloc.dart';
 import 'features/habits/domain/services/habit_management_service.dart';
 import 'features/habits/domain/services/habit_reward_engine.dart';
+import 'features/habits/presentation/bloc/habit_bloc.dart';
+
+import 'features/pomodoro/data/repositories/pomodoro_repository_impl.dart';
+import 'features/pomodoro/data/repositories/pomodoro_settings_repository_impl.dart';
+import 'features/pomodoro/domain/repositories/pomodoro_repository.dart';
+import 'features/pomodoro/domain/repositories/pomodoro_settings_repository.dart';
+import 'features/pomodoro/domain/services/pomodoro_timer_engine.dart';
+import 'features/pomodoro/presentation/bloc/pomodoro_bloc.dart';
 
 final getIt = GetIt.instance;
 
 Future<void> setupDependencies() async {
+  // Core
   getIt.registerLazySingleton<AppDatabase>(() => AppDatabase.instance);
+
+  getIt.registerLazySingleton<Uuid>(() => const Uuid());
+
   getIt.registerLazySingleton<StrictModeService>(() => StrictModeService());
 
+  // Onboarding
   getIt.registerLazySingleton<UserRepository>(
     () => UserRepositoryImpl(appDatabase: getIt<AppDatabase>()),
   );
 
+  getIt.registerFactory<OnboardingBloc>(
+    () => OnboardingBloc(repository: getIt<UserRepository>()),
+  );
+
+  // Daily Missions
   getIt.registerLazySingleton<MissionRecommendationEngine>(
     () => MissionRecommendationEngine(),
   );
 
-  getIt.registerLazySingleton<HabitRewardEngine>(() => HabitRewardEngine());
+  getIt.registerLazySingleton<MissionRepository>(
+    () => MissionRepositoryImpl(appDatabase: getIt<AppDatabase>()),
+  );
 
+  // Gamification
+  getIt.registerLazySingleton<ProgressRepository>(
+    () => ProgressRepositoryImpl(getIt<AppDatabase>()),
+  );
+
+  getIt.registerLazySingleton<ProgressRewardEngine>(
+    () => ProgressRewardEngine(),
+  );
+
+  getIt.registerLazySingleton<AchievementEngine>(() => AchievementEngine());
+
+  getIt.registerFactory<GamificationBloc>(
+    () => GamificationBloc(progressRepository: getIt<ProgressRepository>()),
+  );
+
+  // Events
   getIt.registerLazySingleton<EventOccurrenceEngine>(
     () => EventOccurrenceEngine(),
   );
 
-  getIt.registerLazySingleton<HabitAnalyticsEngine>(
-    () => HabitAnalyticsEngine(),
+  getIt.registerLazySingleton<EventRepository>(
+    () => EventRepositoryImpl(getIt<AppDatabase>()),
+  );
+
+  getIt.registerLazySingleton<EventManagementService>(
+    () => EventManagementService(),
   );
 
   getIt.registerLazySingleton<EventReminderScheduler>(
@@ -67,21 +110,7 @@ Future<void> setupDependencies() async {
     ),
   );
 
-  getIt.registerFactory(
-    () => GamificationBloc(progressRepository: getIt<ProgressRepository>()),
-  );
-
-  getIt.registerLazySingleton<HabitStreakEngine>(() => HabitStreakEngine());
-
-  getIt.registerLazySingleton<EventManagementService>(
-    () => EventManagementService(),
-  );
-
-  getIt.registerLazySingleton<HabitManagementService>(
-    () => HabitManagementService(),
-  );
-
-  getIt.registerFactory(
+  getIt.registerFactory<EventBloc>(
     () => EventBloc(
       eventRepository: getIt<EventRepository>(),
       eventManagementService: getIt<EventManagementService>(),
@@ -89,31 +118,17 @@ Future<void> setupDependencies() async {
     ),
   );
 
-  getIt.registerLazySingleton<EventRepository>(
-    () => EventRepositoryImpl(getIt<AppDatabase>()),
+  // Habits
+  getIt.registerLazySingleton<HabitRewardEngine>(() => HabitRewardEngine());
+
+  getIt.registerLazySingleton<HabitAnalyticsEngine>(
+    () => HabitAnalyticsEngine(),
   );
 
-  getIt.registerLazySingleton<PomodoroTimerEngine>(() => PomodoroTimerEngine());
+  getIt.registerLazySingleton<HabitStreakEngine>(() => HabitStreakEngine());
 
-  getIt.registerFactory<PomodoroBloc>(
-    () => PomodoroBloc(
-      repository: getIt<PomodoroRepository>(),
-      settingsRepository: getIt<PomodoroSettingsRepository>(),
-      timerEngine: getIt<PomodoroTimerEngine>(),
-      strictModeService: getIt<StrictModeService>(),
-    ),
-  );
-
-  getIt.registerLazySingleton<PomodoroSettingsRepository>(
-    () => PomodoroSettingsRepositoryImpl(getIt<AppDatabase>()),
-  );
-
-  getIt.registerLazySingleton<PomodoroRepository>(
-    () => PomodoroRepositoryImpl(getIt<AppDatabase>()),
-  );
-
-  getIt.registerLazySingleton<MissionRepository>(
-    () => MissionRepositoryImpl(appDatabase: getIt<AppDatabase>()),
+  getIt.registerLazySingleton<HabitManagementService>(
+    () => HabitManagementService(),
   );
 
   getIt.registerLazySingleton<HabitRepository>(
@@ -131,8 +146,27 @@ Future<void> setupDependencies() async {
     ),
   );
 
-  getIt.registerLazySingleton<AchievementEngine>(() => AchievementEngine());
+  // Pomodoro
+  getIt.registerLazySingleton<PomodoroTimerEngine>(() => PomodoroTimerEngine());
 
+  getIt.registerLazySingleton<PomodoroSettingsRepository>(
+    () => PomodoroSettingsRepositoryImpl(getIt<AppDatabase>()),
+  );
+
+  getIt.registerLazySingleton<PomodoroRepository>(
+    () => PomodoroRepositoryImpl(getIt<AppDatabase>()),
+  );
+
+  getIt.registerFactory<PomodoroBloc>(
+    () => PomodoroBloc(
+      repository: getIt<PomodoroRepository>(),
+      settingsRepository: getIt<PomodoroSettingsRepository>(),
+      timerEngine: getIt<PomodoroTimerEngine>(),
+      strictModeService: getIt<StrictModeService>(),
+    ),
+  );
+
+  // Daily Mission BLoC
   getIt.registerFactory<MissionBloc>(
     () => MissionBloc(
       userRepository: getIt<UserRepository>(),
@@ -141,17 +175,30 @@ Future<void> setupDependencies() async {
       progressRepository: getIt<ProgressRepository>(),
       rewardEngine: getIt<ProgressRewardEngine>(),
       achievementEngine: getIt<AchievementEngine>(),
+      strictModeRepository: getIt<StrictModeRepository>(),
+      strictModeManagementService: getIt<StrictModeManagementService>(),
+      strictModeService: getIt<StrictModeService>(),
     ),
   );
 
-  getIt.registerLazySingleton<ProgressRewardEngine>(
-    () => ProgressRewardEngine(),
+  // Strict Mode
+  getIt.registerLazySingleton<StrictModeRepository>(
+    () => StrictModeRepositoryImpl(getIt<AppDatabase>()),
   );
 
-  getIt.registerFactory<OnboardingBloc>(
-    () => OnboardingBloc(repository: getIt<UserRepository>()),
+  getIt.registerLazySingleton<AppSelectionService>(() => AppSelectionService());
+
+  getIt.registerLazySingleton<StrictModeManagementService>(
+    () => StrictModeManagementService(
+      getIt<StrictModeRepository>(),
+      getIt<Uuid>(),
+    ),
   );
-  getIt.registerLazySingleton<ProgressRepository>(
-    () => ProgressRepositoryImpl(getIt<AppDatabase>()),
+
+  getIt.registerFactory<StrictModeBloc>(
+    () => StrictModeBloc(
+      managementService: getIt<StrictModeManagementService>(),
+      strictModeService: getIt<StrictModeService>(),
+    ),
   );
 }

@@ -36,9 +36,11 @@ class StrictModeAccessibilityService : AccessibilityService() {
 
     private fun isStrictModeActive(): Boolean {
         val preferences = getSharedPreferences(PREFERENCES, Context.MODE_PRIVATE)
+        if (preferences.getBoolean(MISSION_ACTIVE, false)) return true
         if (!preferences.getBoolean(ACTIVE, false)) return false
 
         val endTime = preferences.getLong(END_TIME, 0L)
+        if (endTime == 0L) return true
         if (endTime > System.currentTimeMillis()) return true
 
         preferences.edit()
@@ -91,6 +93,7 @@ class StrictModeAccessibilityService : AccessibilityService() {
     companion object {
         const val PREFERENCES = "wakelock_strict_mode"
         const val ACTIVE = "active"
+        const val MISSION_ACTIVE = "mission_active"
         const val END_TIME = "end_time_millis"
         private const val BLOCK_ACTION_INTERVAL_MS = 700L
     }

@@ -27,4 +27,12 @@ class StrictModeService {
       'endTimeMillis': endTime?.millisecondsSinceEpoch,
     });
   }
+
+  Future<void> setMissionActive({required bool active}) async {
+    if (!isSupported) return;
+
+    await _channel.invokeMethod<void>('setMissionStrictModeActive', {
+      'active': active,
+    });
+  }
 }

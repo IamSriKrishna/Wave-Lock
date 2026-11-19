@@ -38,7 +38,7 @@ class StrictModeModel extends StrictModeEntity {
       ),
       blockingType: StrictModeBlockingType.values.firstWhere(
         (value) => value.name == map['blocking_type'],
-        orElse: () => StrictModeBlockingType.selectedApps,
+        orElse: () => StrictModeBlockingType.allEligibleApps,
       ),
       releasePolicy: StrictModeReleasePolicy.values.firstWhere(
         (value) => value.name == map['release_policy'],

@@ -5,7 +5,10 @@ import 'package:wakelock/features/gamification/domain/repositories/progress_repo
 import 'package:wakelock/features/gamification/domain/services/achievement_engine.dart';
 import 'package:wakelock/features/gamification/domain/services/progress_reward_engine.dart';
 
+import '../../../../core/services/strict_mode_service.dart';
 import '../../../../features/onboarding/domain/repositories/user_repository.dart';
+import '../../../strict_mode/domain/repositories/strict_mode_repository.dart';
+import '../../../strict_mode/domain/services/strict_mode_management_service.dart';
 import '../../domain/entities/mission_entity.dart';
 import '../../domain/repositories/mission_repository.dart';
 import '../../domain/services/mission_recommendation_engine.dart';
@@ -19,6 +22,9 @@ class MissionBloc extends Bloc<MissionEvent, MissionState> {
   final ProgressRepository progressRepository;
   final ProgressRewardEngine rewardEngine;
   final AchievementEngine achievementEngine;
+  final StrictModeRepository strictModeRepository;
+  final StrictModeManagementService strictModeManagementService;
+  final StrictModeService strictModeService;
 
   Timer? _clockTimer;
 
@@ -29,6 +35,9 @@ class MissionBloc extends Bloc<MissionEvent, MissionState> {
     required this.recommendationEngine,
     required this.progressRepository,
     required this.rewardEngine,
+    required this.strictModeRepository,
+    required this.strictModeManagementService,
+    required this.strictModeService,
   }) : super(MissionState()) {
     on<LoadDailyMissions>(_onLoad);
     on<ToggleMissionSelection>(_onToggle);
@@ -63,6 +72,8 @@ class MissionBloc extends Bloc<MissionEvent, MissionState> {
       final saved = await missionRepository.getMissionsForDate(_todayKey);
 
       if (saved.isNotEmpty) {
+        await _releaseStrictModeForCompletedMission(saved);
+
         final allAccepted = saved.every(
           (mission) => mission.status == 'accepted',
         );
@@ -263,6 +274,7 @@ class MissionBloc extends Bloc<MissionEvent, MissionState> {
     }).toList();
 
     await missionRepository.saveMissions(_todayKey, updatedMissions);
+    await _releaseStrictModeForCompletedMission(updatedMissions);
 
     // Calculate and save XP + streak.
     final currentProgress = await progressRepository.getProgress();
@@ -355,6 +367,23 @@ class MissionBloc extends Bloc<MissionEvent, MissionState> {
 
   void _onClockTick(MissionClockTick event, Emitter<MissionState> emit) {
     emit(state.copyWith(clockNow: DateTime.now()));
+  }
+
+  Future<void> _releaseStrictModeForCompletedMission(
+    List<MissionEntity> missions,
+  ) async {
+    final settings = await strictModeRepository.getSettings();
+    if (settings == null || !settings.isActive) return;
+
+    final linkedMission = missions.where(
+      (mission) => mission.id == settings.linkedMissionId,
+    );
+    if (linkedMission.isEmpty || linkedMission.first.status != 'completed') {
+      return;
+    }
+
+    await strictModeManagementService.completeStrictMode(settings);
+    await strictModeService.setMissionActive(active: false);
   }
 
   @override

@@ -21,7 +21,7 @@ class StrictModeEntity extends Equatable {
   const StrictModeEntity({
     required this.id,
     this.status = StrictModeStatus.disabled,
-    this.blockingType = StrictModeBlockingType.selectedApps,
+    this.blockingType = StrictModeBlockingType.allEligibleApps,
     this.releasePolicy = StrictModeReleasePolicy.taskCompletionOnly,
     this.blockedPackageNames = const [],
     this.linkedMissionId,

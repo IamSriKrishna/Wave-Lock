@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:wakelock/features/pomodoro/presentation/pages/pomodoro_page.dart';
+import 'package:wakelock/features/strict_mode/presentation/pages/strict_mode_page.dart';
 
 import '../../../../injection_container.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -146,6 +147,35 @@ class DashboardPage extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(builder: (_) => const PomodoroPage()),
+                      );
+                    },
+                  ),
+
+                  const SizedBox(height: 12),
+                  ListTile(
+                    leading: const Icon(
+                      Icons.lock_outline_rounded,
+                      color: AppColors.primary,
+                    ),
+                    title: const Text(
+                      'Strict Mode',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                    subtitle: const Text(
+                      'Block distracting apps and protect your focus',
+                      style: TextStyle(color: AppColors.textSecondary),
+                    ),
+                    trailing: const Icon(
+                      Icons.arrow_forward_ios,
+                      color: Colors.white54,
+                      size: 16,
+                    ),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const StrictModePage(),
+                        ),
                       );
                     },
                   ),
