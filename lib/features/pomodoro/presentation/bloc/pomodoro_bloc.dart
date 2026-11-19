@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../../../core/services/strict_mode_service.dart';
 import '../../domain/entities/pomodoro_session_entity.dart';
 import '../../domain/entities/pomodoro_settings_entity.dart';
 import '../../domain/repositories/pomodoro_repository.dart';
@@ -15,6 +16,7 @@ class PomodoroBloc extends Bloc<PomodoroEvent, PomodoroState> {
   final PomodoroRepository repository;
   final PomodoroSettingsRepository settingsRepository;
   final PomodoroTimerEngine timerEngine;
+  final StrictModeService strictModeService;
 
   final Uuid _uuid = const Uuid();
 
@@ -24,6 +26,7 @@ class PomodoroBloc extends Bloc<PomodoroEvent, PomodoroState> {
     required this.repository,
     required this.settingsRepository,
     required this.timerEngine,
+    required this.strictModeService,
   }) : super(const PomodoroState()) {
     on<LoadPomodoro>(_onLoad);
     on<StartPomodoro>(_onStart);
@@ -61,6 +64,7 @@ class PomodoroBloc extends Bloc<PomodoroEvent, PomodoroState> {
       session ??= _createSession(PomodoroSessionType.focus, settings);
 
       await repository.saveActiveSession(session);
+      await _syncStrictMode(session);
 
       emit(
         state.copyWith(
@@ -95,6 +99,7 @@ class PomodoroBloc extends Bloc<PomodoroEvent, PomodoroState> {
     final session = timerEngine.start(current);
 
     await repository.saveActiveSession(session);
+    await _syncStrictMode(session);
 
     emit(state.copyWith(session: session, clearError: true));
     _startTicker();
@@ -112,6 +117,7 @@ class PomodoroBloc extends Bloc<PomodoroEvent, PomodoroState> {
     final session = timerEngine.pause(current);
 
     await repository.saveActiveSession(session);
+    await _syncStrictMode(session);
 
     emit(state.copyWith(session: session));
   }
@@ -126,6 +132,7 @@ class PomodoroBloc extends Bloc<PomodoroEvent, PomodoroState> {
     final session = timerEngine.resume(current);
 
     await repository.saveActiveSession(session);
+    await _syncStrictMode(session);
 
     emit(state.copyWith(session: session));
     _startTicker();
@@ -143,6 +150,7 @@ class PomodoroBloc extends Bloc<PomodoroEvent, PomodoroState> {
     final session = timerEngine.reset(current);
 
     await repository.saveActiveSession(session);
+    await _syncStrictMode(session);
 
     emit(state.copyWith(session: session));
   }
@@ -160,6 +168,7 @@ class PomodoroBloc extends Bloc<PomodoroEvent, PomodoroState> {
     );
 
     await repository.saveActiveSession(session);
+    await _syncStrictMode(session);
 
     emit(state.copyWith(session: session));
   }
@@ -204,6 +213,7 @@ class PomodoroBloc extends Bloc<PomodoroEvent, PomodoroState> {
       final nextSession = _createNextSession(completed, state.settings);
 
       await repository.saveActiveSession(nextSession);
+      await _syncStrictMode(nextSession);
 
       emit(
         state.copyWith(
@@ -266,6 +276,16 @@ class PomodoroBloc extends Bloc<PomodoroEvent, PomodoroState> {
 
   Future<void> _saveCompletedSession(PomodoroSessionEntity session) async {
     await repository.saveCompletedSession(session);
+  }
+
+  Future<void> _syncStrictMode(PomodoroSessionEntity session) {
+    final active =
+        session.isFocus && session.status == PomodoroSessionStatus.running;
+
+    return strictModeService.setActive(
+      active: active,
+      endTime: active ? session.endTime : null,
+    );
   }
 
   void _startTicker() {

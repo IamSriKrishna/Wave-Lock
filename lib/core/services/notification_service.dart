@@ -96,6 +96,19 @@ class NotificationService {
     return granted ?? false;
   }
 
+  Future<bool> requestFullScreenIntentPermission() async {
+    final android = _notifications
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
+
+    if (android == null) return false;
+
+    final granted = await android.requestFullScreenIntentPermission();
+
+    return granted ?? false;
+  }
+
   Future<bool> canScheduleExactAlarms() async {
     final android = _notifications
         .resolvePlatformSpecificImplementation<
@@ -112,6 +125,7 @@ class NotificationService {
     required String title,
     required String body,
     required tz.TZDateTime scheduledDate,
+    bool isEventAlarm = false,
     String? payload,
   }) async {
     if (!_initialized) {
@@ -122,16 +136,21 @@ class NotificationService {
       throw ArgumentError('Notification date must be in the future.');
     }
 
-    const androidDetails = AndroidNotificationDetails(
-      'wakelock_events',
-      'WakeLock Event Reminders',
-      channelDescription: 'Notifications for your scheduled events',
+    final androidDetails = AndroidNotificationDetails(
+      isEventAlarm ? 'wakelock_event_alarms' : 'wakelock_events',
+      isEventAlarm ? 'WakeLock Event Alarms' : 'WakeLock Event Reminders',
+      channelDescription: isEventAlarm
+          ? 'Alarms when scheduled events begin'
+          : 'Notifications for your scheduled events',
       importance: Importance.max,
-      priority: Priority.high,
+      priority: Priority.max,
       playSound: true,
+      enableVibration: true,
+      category: isEventAlarm ? AndroidNotificationCategory.alarm : null,
+      fullScreenIntent: isEventAlarm,
     );
 
-    const details = NotificationDetails(android: androidDetails);
+    final details = NotificationDetails(android: androidDetails);
 
     final scheduleMode = await canScheduleExactAlarms()
         ? AndroidScheduleMode.exactAllowWhileIdle

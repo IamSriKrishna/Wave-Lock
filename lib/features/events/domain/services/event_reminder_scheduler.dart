@@ -13,9 +13,7 @@ class EventReminderScheduler {
   Future<void> scheduleEvent(EventEntity event) async {
     await cancelEvent(event);
 
-    if (event.isCompleted ||
-        event.startTimeMinutes == null ||
-        event.reminderMinutesBefore == null) {
+    if (event.isCompleted || event.startTimeMinutes == null) {
       return;
     }
 
@@ -34,26 +32,34 @@ class EventReminderScheduler {
         occurrence.day,
       ).add(Duration(minutes: event.startTimeMinutes!));
 
-      final reminderDateTime = eventDateTime.subtract(
-        Duration(minutes: event.reminderMinutesBefore!),
-      );
+      if (eventDateTime.isAfter(now)) {
+        await _notificationService.scheduleNotification(
+          id: _notificationId('${event.id}-start', occurrence),
+          title: 'Starting now: ${event.title}',
+          body: event.description.isEmpty
+              ? 'Your event is starting now.'
+              : event.description,
+          scheduledDate: tz.TZDateTime.from(eventDateTime, tz.local),
+          isEventAlarm: true,
+        );
+      }
 
+      final reminderMinutesBefore = event.reminderMinutesBefore;
+      if (reminderMinutesBefore == null) continue;
+
+      final reminderDateTime = eventDateTime.subtract(
+        Duration(minutes: reminderMinutesBefore),
+      );
       if (!reminderDateTime.isAfter(now)) continue;
 
-      final notificationId = _notificationId(event.id, occurrence);
-
-      try {
-        await _notificationService.scheduleNotification(
-          id: notificationId,
-          title: 'Upcoming: ${event.title}',
-          body: event.description.isEmpty
-              ? 'Your event is starting soon.'
-              : event.description,
-          scheduledDate: tz.TZDateTime.from(reminderDateTime, tz.local),
-        );
-      } catch (_) {
-        // Saving the event must succeed even if Android denies alarm access.
-      }
+      await _notificationService.scheduleNotification(
+        id: _notificationId(event.id, occurrence),
+        title: 'Upcoming: ${event.title}',
+        body: event.description.isEmpty
+            ? 'Your event is starting soon.'
+            : event.description,
+        scheduledDate: tz.TZDateTime.from(reminderDateTime, tz.local),
+      );
     }
   }
 
@@ -69,6 +75,9 @@ class EventReminderScheduler {
     for (final occurrence in occurrences) {
       await _notificationService.cancelNotification(
         _notificationId(event.id, occurrence),
+      );
+      await _notificationService.cancelNotification(
+        _notificationId('${event.id}-start', occurrence),
       );
     }
   }

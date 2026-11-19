@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/services/strict_mode_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../injection_container.dart';
 import '../../domain/entities/pomodoro_session_entity.dart';
@@ -67,6 +68,64 @@ class _PomodoroView extends StatelessWidget {
     }
 
     context.read<PomodoroBloc>().add(SelectPomodoroType(type));
+  }
+
+  Future<void> _startFocus(
+    BuildContext context,
+    PomodoroState state, {
+    required bool resume,
+  }) async {
+    final session = state.session;
+    if (session?.isFocus != true) {
+      context.read<PomodoroBloc>().add(
+        resume ? const ResumePomodoro() : const StartPomodoro(),
+      );
+      return;
+    }
+
+    final strictModeService = getIt<StrictModeService>();
+    if (!strictModeService.isSupported) {
+      context.read<PomodoroBloc>().add(
+        resume ? const ResumePomodoro() : const StartPomodoro(),
+      );
+      return;
+    }
+
+    if (!await strictModeService.isAccessibilityEnabled()) {
+      if (!context.mounted) return;
+
+      final openSettings = await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: const Text('Enable Strict Mode'),
+          content: const Text(
+            'Strict Mode allows WhatsApp and Phone during focus and blocks '
+            'other apps. Enable WakeLock in Android Accessibility settings, '
+            'then return and start focus again.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text('Not now'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: const Text('Open Settings'),
+            ),
+          ],
+        ),
+      );
+
+      if (openSettings == true) {
+        await strictModeService.openAccessibilitySettings();
+      }
+      return;
+    }
+
+    if (!context.mounted) return;
+    context.read<PomodoroBloc>().add(
+      resume ? const ResumePomodoro() : const StartPomodoro(),
+    );
   }
 
   @override
@@ -184,9 +243,9 @@ class _PomodoroView extends StatelessWidget {
                 PomodoroControls(
                   isRunning: state.isRunning,
                   isPaused: state.isPaused,
-                  onStart: () => bloc.add(const StartPomodoro()),
+                  onStart: () => _startFocus(context, state, resume: false),
                   onPause: () => bloc.add(const PausePomodoro()),
-                  onResume: () => bloc.add(const ResumePomodoro()),
+                  onResume: () => _startFocus(context, state, resume: true),
                   onReset: () => bloc.add(const ResetPomodoro()),
                 ),
 

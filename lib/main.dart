@@ -1,9 +1,31 @@
 import 'package:flutter/material.dart';
 import 'package:wakelock/core/services/notification_service.dart';
+import 'package:wakelock/features/events/domain/repositories/event_repository.dart';
+import 'package:wakelock/features/events/domain/services/event_reminder_scheduler.dart';
 
 import 'core/router/app_start_gate.dart';
 import 'core/theme/app_theme.dart';
 import 'injection_container.dart';
+
+Future<void> _restoreEventReminders() async {
+  final events = await getIt<EventRepository>().getEvents();
+  final scheduler = getIt<EventReminderScheduler>();
+
+  for (final event in events) {
+    try {
+      await scheduler.scheduleEvent(event);
+    } catch (error, stackTrace) {
+      FlutterError.reportError(
+        FlutterErrorDetails(
+          exception: error,
+          stack: stackTrace,
+          library: 'event reminder restoration',
+          context: ErrorDescription('while restoring "${event.title}"'),
+        ),
+      );
+    }
+  }
+}
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -11,6 +33,7 @@ Future<void> main() async {
   await setupDependencies();
 
   await NotificationService.instance.initialize();
+  await _restoreEventReminders();
 
   runApp(const WakeLockApp());
 }

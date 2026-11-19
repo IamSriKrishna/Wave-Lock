@@ -1,5 +1,6 @@
 import 'package:get_it/get_it.dart';
 import 'package:wakelock/core/services/notification_service.dart';
+import 'package:wakelock/core/services/strict_mode_service.dart';
 import 'package:wakelock/features/events/domain/services/event_occurrence_engine.dart';
 
 import 'core/database/app_database.dart';
@@ -39,6 +40,7 @@ final getIt = GetIt.instance;
 
 Future<void> setupDependencies() async {
   getIt.registerLazySingleton<AppDatabase>(() => AppDatabase.instance);
+  getIt.registerLazySingleton<StrictModeService>(() => StrictModeService());
 
   getIt.registerLazySingleton<UserRepository>(
     () => UserRepositoryImpl(appDatabase: getIt<AppDatabase>()),
@@ -98,6 +100,7 @@ Future<void> setupDependencies() async {
       repository: getIt<PomodoroRepository>(),
       settingsRepository: getIt<PomodoroSettingsRepository>(),
       timerEngine: getIt<PomodoroTimerEngine>(),
+      strictModeService: getIt<StrictModeService>(),
     ),
   );
 

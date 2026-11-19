@@ -1,0 +1,3 @@
+<resources>
+    <string name="strict_mode_accessibility_description">While a Pomodoro focus session is running, WakeLock blocks other apps except WhatsApp and the default Phone app.</string>
+</resources>

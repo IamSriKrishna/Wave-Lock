@@ -119,9 +119,10 @@ class _CreateEventPageState extends State<CreateEventPage> {
 
     setState(() => _submitted = true);
 
-    if (_reminderMinutes != null) {
+    if (_startTime != null) {
       await NotificationService.instance.requestPermissions();
       await NotificationService.instance.requestExactAlarmPermission();
+      await NotificationService.instance.requestFullScreenIntentPermission();
     }
 
     if (!mounted) return;
