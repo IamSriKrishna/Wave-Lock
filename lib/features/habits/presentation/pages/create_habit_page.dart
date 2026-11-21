@@ -1,9 +1,13 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/services/habit_alarm_platform_service.dart';
+import '../../../../core/services/notification_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../bloc/habit_bloc.dart';
 import '../bloc/habit_event.dart';
+import '../utils/habit_time_parser.dart';
 
 class CreateHabitPage extends StatefulWidget {
   const CreateHabitPage({super.key});
@@ -21,6 +25,7 @@ class _CreateHabitPageState extends State<CreateHabitPage> {
   final List<int> _selectedDays = [];
 
   TimeOfDay? _selectedTime;
+  bool _timeWasAutoDetected = false;
 
   String _category = 'Personal Development';
 
@@ -61,12 +66,63 @@ class _CreateHabitPageState extends State<CreateHabitPage> {
     if (selected != null) {
       setState(() {
         _selectedTime = selected;
+        _timeWasAutoDetected = false;
       });
     }
   }
 
-  void _createHabit() {
+  void _updateTimeFromTitle(String title) {
+    final minutes = parseTimeMinutesFromTitle(title);
+
+    if (minutes != null) {
+      setState(() {
+        _selectedTime = TimeOfDay(hour: minutes ~/ 60, minute: minutes % 60);
+        _timeWasAutoDetected = true;
+      });
+    } else if (_timeWasAutoDetected) {
+      setState(() {
+        _selectedTime = null;
+        _timeWasAutoDetected = false;
+      });
+    }
+  }
+
+  Future<void> _createHabit() async {
     if (!_formKey.currentState!.validate()) return;
+
+    if (_selectedTime != null &&
+        defaultTargetPlatform == TargetPlatform.android) {
+      if (!await HabitAlarmPlatformService.canDrawOverlays()) {
+        await HabitAlarmPlatformService.requestOverlayPermission();
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Allow WakeLock to display over other apps, then tap Create Habit again.',
+            ),
+          ),
+        );
+        return;
+      }
+
+      final notifications = NotificationService.instance;
+      await notifications.initialize();
+      final exactAlarmGranted = await notifications
+          .requestExactAlarmPermission();
+      if (!exactAlarmGranted) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Allow Alarms & reminders for WakeLock, then tap Create Habit again.',
+            ),
+          ),
+        );
+        return;
+      }
+    }
+
+    if (!mounted) return;
 
     context.read<HabitBloc>().add(
       CreateHabit(
@@ -103,6 +159,7 @@ class _CreateHabitPageState extends State<CreateHabitPage> {
                 labelText: 'Habit name',
                 hintText: 'Example: Read 20 pages',
               ),
+              onChanged: _updateTimeFromTitle,
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
                   return 'Enter a habit name';
@@ -175,6 +232,7 @@ class _CreateHabitPageState extends State<CreateHabitPage> {
                       onPressed: () {
                         setState(() {
                           _selectedTime = null;
+                          _timeWasAutoDetected = false;
                         });
                       },
                       icon: const Icon(Icons.close, color: Colors.white54),

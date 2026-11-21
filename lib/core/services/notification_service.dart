@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:timezone/data/latest.dart' as tz;
@@ -12,26 +13,60 @@ class NotificationService {
       FlutterLocalNotificationsPlugin();
 
   bool _initialized = false;
+  bool _launchDetailsChecked = false;
+  DidReceiveNotificationResponseCallback? _onNotificationResponse;
 
-  Future<void> initialize() async {
-    if (_initialized) return;
+  @visibleForTesting
+  static String normalizeTimeZoneIdentifier(String identifier) {
+    return switch (identifier) {
+      'Asia/Calcutta' => 'Asia/Kolkata',
+      _ => identifier,
+    };
+  }
 
-    tz.initializeTimeZones();
+  Future<void> initialize({
+    DidReceiveNotificationResponseCallback? onNotificationResponse,
+  }) async {
+    _onNotificationResponse = onNotificationResponse ?? _onNotificationResponse;
 
-    final timezoneInfo = await FlutterTimezone.getLocalTimezone();
+    if (!_initialized) {
+      tz.initializeTimeZones();
 
-    final location = tz.getLocation(timezoneInfo.identifier);
-    tz.setLocalLocation(location);
+      final timezoneInfo = await FlutterTimezone.getLocalTimezone();
 
-    const androidSettings = AndroidInitializationSettings(
-      '@mipmap/ic_launcher',
-    );
+      final identifier = normalizeTimeZoneIdentifier(timezoneInfo.identifier);
+      final location = tz.getLocation(identifier);
+      tz.setLocalLocation(location);
 
-    const settings = InitializationSettings(android: androidSettings);
+      const androidSettings = AndroidInitializationSettings(
+        '@mipmap/ic_launcher',
+      );
 
-    await _notifications.initialize(settings: settings);
+      const settings = InitializationSettings(android: androidSettings);
 
-    _initialized = true;
+      await _notifications.initialize(
+        settings: settings,
+        onDidReceiveNotificationResponse: _handleNotificationResponse,
+      );
+
+      _initialized = true;
+    }
+
+    if (!_launchDetailsChecked) {
+      _launchDetailsChecked = true;
+      final launchDetails = await _notifications
+          .getNotificationAppLaunchDetails();
+      if (launchDetails?.didNotificationLaunchApp ?? false) {
+        final response = launchDetails?.notificationResponse;
+        if (response != null) {
+          _handleNotificationResponse(response);
+        }
+      }
+    }
+  }
+
+  void _handleNotificationResponse(NotificationResponse response) {
+    _onNotificationResponse?.call(response);
   }
 
   Future<bool> requestPermissions() async {
@@ -73,6 +108,25 @@ class NotificationService {
 
   Future<void> cancelNotification(int id) async {
     await _notifications.cancel(id: id);
+  }
+
+  Future<void> snoozeAlarm({
+    required int notificationId,
+    required String title,
+    required String body,
+    required String payload,
+  }) async {
+    final snoozeId = (notificationId ^ 0x40000000) & 0x7fffffff;
+    await cancelNotification(snoozeId);
+    await scheduleNotification(
+      id: snoozeId,
+      title: title,
+      body: body,
+      scheduledDate: tz.TZDateTime.now(tz.local)
+          .add(const Duration(minutes: 5)),
+      isEventAlarm: true,
+      payload: payload,
+    );
   }
 
   Future<void> cancelAllNotifications() async {
@@ -127,6 +181,7 @@ class NotificationService {
     required tz.TZDateTime scheduledDate,
     bool isEventAlarm = false,
     String? payload,
+    DateTimeComponents? matchDateTimeComponents,
   }) async {
     if (!_initialized) {
       throw StateError('NotificationService is not initialized.');
@@ -148,6 +203,9 @@ class NotificationService {
       enableVibration: true,
       category: isEventAlarm ? AndroidNotificationCategory.alarm : null,
       fullScreenIntent: isEventAlarm,
+      audioAttributesUsage: isEventAlarm
+          ? AudioAttributesUsage.alarm
+          : AudioAttributesUsage.notification,
     );
 
     final details = NotificationDetails(android: androidDetails);
@@ -164,6 +222,7 @@ class NotificationService {
       notificationDetails: details,
       androidScheduleMode: scheduleMode,
       payload: payload,
+      matchDateTimeComponents: matchDateTimeComponents,
     );
   }
 }

@@ -47,6 +47,11 @@ void main() {
 
     expect(plan.map((step) => step.goal), contains('Coding & Programming'));
     expect(plan.map((step) => step.goal), contains('Fitness'));
+    expect(
+      plan.where((step) => step.goal == 'Coding & Programming'),
+      hasLength(3),
+    );
+    expect(plan.where((step) => step.goal == 'Fitness'), hasLength(3));
     expect(plan.first.description, contains('Video'));
     expect(plan.first.description, contains('2 h 30 min'));
     expect(plan.last.title, 'Review your progress');
@@ -63,7 +68,47 @@ void main() {
     );
 
     expect(plan.first.title, 'Set your focus boundary');
-    expect(plan.any((step) => step.title == 'Build something small'), isTrue);
-    expect(plan.any((step) => step.title == 'Move your body'), isTrue);
+    expect(
+      plan.any((step) => step.title == 'Choose a small coding target'),
+      isTrue,
+    );
+    expect(plan.any((step) => step.title == 'Get moving safely'), isTrue);
+  });
+
+  test('generates three stages for every selected goal', () {
+    const goals = [
+      'Coding & Programming',
+      'Learning',
+      'Professional Work',
+      'College & Academics',
+      'Business',
+      'Reading',
+      'Fitness',
+      'Personal Development',
+    ];
+    final allGoalsUser = UserEntity(
+      id: user.id,
+      name: user.name,
+      goals: goals,
+      experienceLevel: user.experienceLevel,
+      dailyAvailableMinutes: user.dailyAvailableMinutes,
+      preferredStartTime: user.preferredStartTime,
+      preferredEndTime: user.preferredEndTime,
+      createdAt: user.createdAt,
+    );
+
+    final plan = generator.generate(user: allGoalsUser, usage: null);
+    final goalStages = plan.where((step) => goals.contains(step.goal)).toList();
+
+    expect(plan, hasLength(26));
+    expect(goalStages, hasLength(goals.length * 3));
+    for (final goal in goals) {
+      expect(goalStages.where((step) => step.goal == goal), hasLength(3));
+    }
+    expect(plan.map((step) => step.id).toSet(), hasLength(plan.length));
+    expect(
+      plan.fold<int>(0, (total, step) => total + step.estimatedMinutes),
+      lessThanOrEqualTo(user.dailyAvailableMinutes),
+    );
   });
 }

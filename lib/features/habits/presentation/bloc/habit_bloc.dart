@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/entities/habit_entity.dart';
 import '../../domain/repositories/habit_repository.dart';
 import '../../domain/services/habit_management_service.dart';
+import '../../domain/services/habit_reminder_scheduler.dart';
 import '../../domain/services/habit_streak_engine.dart';
 import '../../domain/services/habit_reward_engine.dart';
 import '../../../gamification/domain/services/achievement_engine.dart';
@@ -15,6 +16,7 @@ import 'habit_state.dart';
 class HabitBloc extends Bloc<HabitEvent, HabitState> {
   final HabitRepository habitRepository;
   final HabitManagementService managementService;
+  final HabitReminderScheduler reminderScheduler;
   final HabitStreakEngine streakEngine;
   final HabitRewardEngine rewardEngine;
   final AchievementEngine achievementEngine;
@@ -23,6 +25,7 @@ class HabitBloc extends Bloc<HabitEvent, HabitState> {
   HabitBloc({
     required this.habitRepository,
     required this.managementService,
+    required this.reminderScheduler,
     required this.achievementEngine,
     required this.streakEngine,
     required this.rewardEngine,
@@ -72,6 +75,7 @@ class HabitBloc extends Bloc<HabitEvent, HabitState> {
       final updatedHabits = [...state.habits, habit];
 
       await habitRepository.saveHabit(habit);
+      await reminderScheduler.scheduleHabit(habit);
 
       emit(
         state.copyWith(
@@ -95,10 +99,15 @@ class HabitBloc extends Bloc<HabitEvent, HabitState> {
     Emitter<HabitState> emit,
   ) async {
     try {
+      final habit = state.habits.firstWhere(
+        (habit) => habit.id == event.habitId,
+      );
+
+      await reminderScheduler.cancelHabit(habit);
       await habitRepository.deleteHabit(event.habitId);
 
       final updatedHabits = state.habits
-          .where((habit) => habit.id != event.habitId)
+          .where((item) => item.id != event.habitId)
           .toList();
 
       emit(

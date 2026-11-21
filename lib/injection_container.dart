@@ -45,6 +45,7 @@ import 'features/habits/domain/repositories/habit_repository.dart';
 import 'features/habits/domain/services/habit_analytics_engine.dart';
 import 'features/habits/domain/services/habit_streak_engine.dart';
 import 'features/habits/domain/services/habit_management_service.dart';
+import 'features/habits/domain/services/habit_reminder_scheduler.dart';
 import 'features/habits/domain/services/habit_reward_engine.dart';
 import 'features/habits/presentation/bloc/habit_bloc.dart';
 
@@ -170,6 +171,10 @@ Future<void> setupDependencies() async {
     () => HabitManagementService(),
   );
 
+  getIt.registerLazySingleton<HabitReminderScheduler>(
+    () => HabitReminderScheduler(NotificationService.instance),
+  );
+
   getIt.registerLazySingleton<HabitRepository>(
     () => HabitRepositoryImpl(getIt<AppDatabase>()),
   );
@@ -178,6 +183,7 @@ Future<void> setupDependencies() async {
     () => HabitBloc(
       habitRepository: getIt<HabitRepository>(),
       managementService: getIt<HabitManagementService>(),
+      reminderScheduler: getIt<HabitReminderScheduler>(),
       streakEngine: getIt<HabitStreakEngine>(),
       rewardEngine: getIt<HabitRewardEngine>(),
       progressRepository: getIt<ProgressRepository>(),

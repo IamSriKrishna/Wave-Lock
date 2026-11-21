@@ -10,6 +10,11 @@ import android.app.usage.UsageStatsManager
 import android.os.Build
 import android.os.Process
 import android.provider.Settings
+import android.net.Uri
+import android.media.Ringtone
+import android.media.RingtoneManager
+import android.os.VibrationEffect
+import android.os.Vibrator
 import java.util.Calendar
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
@@ -20,11 +25,119 @@ class MainActivity : FlutterActivity() {
     private val channelName = "com.wakelock/app_selection"
     private val strictModeChannelName = "com.wakelock/strict_mode"
     private val appUsageChannelName = "com.wakelock/app_usage"
+    private val habitAlarmChannelName = "com.wakelock/habit_alarm_overlay"
+    private var habitAlarmChannel: MethodChannel? = null
+    private var alarmRingtone: Ringtone? = null
+    private var alarmVibrator: Vibrator? = null
+
+    override fun onCreate(savedInstanceState: android.os.Bundle?) {
+        super.onCreate(savedInstanceState)
+        if (intent.hasExtra(HabitAlarmReceiver.EXTRA_ALARM_ID)) {
+            startAlarmSound()
+        }
+    }
 
     override fun configureFlutterEngine(
         flutterEngine: FlutterEngine
     ) {
         super.configureFlutterEngine(flutterEngine)
+
+        habitAlarmChannel = MethodChannel(
+            flutterEngine.dartExecutor.binaryMessenger,
+            habitAlarmChannelName
+        ).also { channel ->
+            channel.setMethodCallHandler { call, result ->
+                when (call.method) {
+                    "canDrawOverlays" -> {
+                        result.success(
+                            Build.VERSION.SDK_INT < Build.VERSION_CODES.M ||
+                                Settings.canDrawOverlays(this)
+                        )
+                    }
+
+                    "requestOverlayPermission" -> {
+                        if (
+                            Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
+                            !Settings.canDrawOverlays(this)
+                        ) {
+                            val intent = Intent(
+                                Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                                Uri.parse("package:$packageName")
+                            )
+                            startActivity(intent)
+                        }
+                        result.success(null)
+                    }
+
+                    "scheduleHabitAlarm" -> {
+                        try {
+                            HabitAlarmReceiver.schedule(
+                                context = this,
+                                alarmId = call.argument<Number>("alarmId")!!.toInt(),
+                                title = call.argument<String>("title")!!,
+                                body = call.argument<String>("body") ?: "",
+                                payload = call.argument<String>("payload") ?: "",
+                                weekday = call.argument<Number>("weekday")!!.toInt(),
+                                timeMinutes = call.argument<Number>("timeMinutes")!!.toInt(),
+                            )
+                            result.success(null)
+                        } catch (error: Exception) {
+                            result.error(
+                                "HABIT_ALARM_SCHEDULE_ERROR",
+                                error.message,
+                                null
+                            )
+                        }
+                    }
+
+                    "cancelHabitAlarm" -> {
+                        try {
+                            HabitAlarmReceiver.cancel(
+                                this,
+                                call.argument<Number>("alarmId")!!.toInt()
+                            )
+                            result.success(null)
+                        } catch (error: Exception) {
+                            result.error(
+                                "HABIT_ALARM_CANCEL_ERROR",
+                                error.message,
+                                null
+                            )
+                        }
+                    }
+
+                    "snoozeHabitAlarm" -> {
+                        try {
+                            HabitAlarmReceiver.scheduleSnooze(
+                                context = this,
+                                alarmId = call.argument<Number>("alarmId")!!.toInt(),
+                                title = call.argument<String>("title")!!,
+                                body = call.argument<String>("body") ?: "",
+                                payload = call.argument<String>("payload") ?: "",
+                            )
+                            result.success(null)
+                        } catch (error: Exception) {
+                            result.error(
+                                "HABIT_ALARM_SNOOZE_ERROR",
+                                error.message,
+                                null
+                            )
+                        }
+                    }
+
+                    "consumeLaunchAlarm" -> {
+                        result.success(consumeLaunchAlarm())
+                    }
+
+                    "stopAlarmSound" -> {
+                        stopAlarmSound()
+                        result.success(null)
+                    }
+
+                    else -> result.notImplemented()
+                }
+            }
+        }
 
         MethodChannel(
             flutterEngine.dartExecutor.binaryMessenger,
@@ -131,6 +244,70 @@ class MainActivity : FlutterActivity() {
                 else -> result.notImplemented()
             }
         }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        if (intent.hasExtra(HabitAlarmReceiver.EXTRA_ALARM_ID)) {
+            startAlarmSound()
+        }
+        consumeLaunchAlarm()?.let { alarm ->
+            habitAlarmChannel?.invokeMethod("alarmLaunched", alarm)
+        }
+    }
+
+    private fun startAlarmSound() {
+        if (alarmRingtone?.isPlaying == true) return
+
+        val alarmUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
+            ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+            ?: return
+        alarmRingtone = RingtoneManager.getRingtone(this, alarmUri)?.apply {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                isLooping = true
+            }
+            play()
+        }
+        alarmVibrator = getSystemService(Vibrator::class.java)?.apply {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                vibrate(
+                    VibrationEffect.createWaveform(
+                        longArrayOf(0, 700, 500),
+                        0
+                    )
+                )
+            } else {
+                @Suppress("DEPRECATION")
+                vibrate(longArrayOf(0, 700, 500), 0)
+            }
+        }
+    }
+
+    private fun stopAlarmSound() {
+        alarmRingtone?.stop()
+        alarmRingtone = null
+        alarmVibrator?.cancel()
+        alarmVibrator = null
+    }
+
+    private fun consumeLaunchAlarm(): Map<String, Any>? {
+        val launchIntent = intent
+        if (!launchIntent.hasExtra(HabitAlarmReceiver.EXTRA_ALARM_ID)) {
+            return null
+        }
+
+        val alarm = mapOf(
+            "alarmId" to launchIntent.getIntExtra(HabitAlarmReceiver.EXTRA_ALARM_ID, 0),
+            "title" to (launchIntent.getStringExtra(HabitAlarmReceiver.EXTRA_TITLE) ?: ""),
+            "body" to (launchIntent.getStringExtra(HabitAlarmReceiver.EXTRA_BODY) ?: ""),
+            "payload" to (launchIntent.getStringExtra(HabitAlarmReceiver.EXTRA_PAYLOAD) ?: ""),
+        )
+        launchIntent.removeExtra(HabitAlarmReceiver.EXTRA_ALARM_ID)
+        launchIntent.removeExtra(HabitAlarmReceiver.EXTRA_TITLE)
+        launchIntent.removeExtra(HabitAlarmReceiver.EXTRA_BODY)
+        launchIntent.removeExtra(HabitAlarmReceiver.EXTRA_PAYLOAD)
+        return alarm
     }
 
     private fun isStrictModeAccessibilityEnabled(): Boolean {

@@ -32,16 +32,27 @@ class DailyGrowthPlanGenerator {
       ),
     ];
 
-    final chosenGoals = user.goals.take(2).toList();
-    for (final goal in chosenGoals) {
-      final action = _goalAction(goal);
+    final goalStages = [
+      for (final goal in user.goals)
+        for (final entry in _goalActions(goal).indexed)
+          (goal: goal, action: entry.$2, stageNumber: entry.$1 + 1),
+    ];
+    for (final entry in goalStages.indexed) {
+      final goal = entry.$2.goal;
+      final action = entry.$2.action;
       steps.add(
         DailyGrowthStep(
-          id: 'goal-${_slug(goal)}',
+          id: entry.$2.stageNumber == 1
+              ? 'goal-${_slug(goal)}'
+              : 'goal-${_slug(goal)}-${entry.$2.stageNumber}',
           title: action.title,
           description: action.description,
           goal: goal,
-          estimatedMinutes: _goalMinutes(availableMinutes, chosenGoals.length),
+          estimatedMinutes: _goalStageMinutes(
+            availableMinutes,
+            goalStages.length,
+            entry.$1,
+          ),
         ),
       );
     }
@@ -74,9 +85,18 @@ class DailyGrowthPlanGenerator {
     return null;
   }
 
-  static int _goalMinutes(int availableMinutes, int goalCount) {
-    final minutes = availableMinutes ~/ (goalCount + 2);
-    return minutes.clamp(10, 25);
+  static int _goalStageMinutes(
+    int availableMinutes,
+    int stageCount,
+    int stageIndex,
+  ) {
+    final goalTime = (availableMinutes - 4).clamp(
+      0,
+      availableMinutes < 0 ? 0 : availableMinutes,
+    );
+    final minutes = goalTime ~/ stageCount;
+    final remainder = goalTime % stageCount;
+    return (minutes + (stageIndex < remainder ? 1 : 0)).clamp(1, 25);
   }
 
   static String _slug(String value) => value
@@ -92,54 +112,146 @@ class DailyGrowthPlanGenerator {
     return '$hours h $minutes min';
   }
 
-  static ({String title, String description}) _goalAction(String goal) {
+  static List<({String title, String description})> _goalActions(String goal) {
     switch (goal) {
       case 'Coding & Programming':
-        return (
-          title: 'Build something small',
-          description: 'Spend one focused block coding a tiny feature or solving one programming problem. Stop when the block ends and note your next step.',
-        );
+        return [
+          (
+            title: 'Choose a small coding target',
+            description: 'Pick one tiny feature or programming problem and define what finished looks like.',
+          ),
+          (
+            title: 'Build one small thing',
+            description: 'Work on your chosen coding target without switching tasks. Keep the scope small enough to finish.',
+          ),
+          (
+            title: 'Test and note your next step',
+            description: 'Run your work or check your solution, then write down one improvement or next coding task.',
+          ),
+        ];
       case 'Learning':
-        return (
-          title: 'Learn, then recall',
-          description: 'Study one small lesson without switching apps. Close it afterward and write down three things you remember.',
-        );
+        return [
+          (
+            title: 'Choose one learning topic',
+            description: 'Select one small lesson or concept and decide what you want to understand by the end.',
+          ),
+          (
+            title: 'Study with focus',
+            description: 'Work through the lesson without switching apps. Pause to explain the main idea in your own words.',
+          ),
+          (
+            title: 'Recall what you learned',
+            description: 'Close your material and write down three things you remember plus one question to explore next.',
+          ),
+        ];
       case 'Professional Work':
-        return (
-          title: 'Move one important task forward',
-          description: 'Choose the highest-impact work task, silence non-essential notifications, and make a visible first increment of progress.',
-        );
+        return [
+          (
+            title: 'Pick your highest-impact task',
+            description: 'Choose one important work task and define the smallest useful result you can deliver.',
+          ),
+          (
+            title: 'Make focused progress',
+            description: 'Silence non-essential notifications and work on the task until you have a visible first result.',
+          ),
+          (
+            title: 'Review and plan the follow-up',
+            description: 'Check what changed, capture any blocker, and identify the next action for this task.',
+          ),
+        ];
       case 'College & Academics':
-        return (
-          title: 'Study with active recall',
-          description: 'Review one topic, then test yourself from memory instead of rereading. Mark one question to revisit.',
-        );
+        return [
+          (
+            title: 'Choose one study topic',
+            description: 'Pick a topic or assignment and identify one question you want to answer.',
+          ),
+          (
+            title: 'Study and explain',
+            description: 'Review the material, then explain the main idea aloud or in your own notes.',
+          ),
+          (
+            title: 'Test your understanding',
+            description: 'Answer a question from memory and mark anything you need to review again.',
+          ),
+        ];
       case 'Business':
-        return (
-          title: 'Take one business-building action',
-          description: 'Complete one concrete action for a customer or your business: follow up, improve an offer, or validate an idea.',
-        );
+        return [
+          (
+            title: 'Choose a business priority',
+            description: 'Identify one useful action for a customer, offer, or business idea.',
+          ),
+          (
+            title: 'Take the concrete action',
+            description: 'Follow up with a customer, improve an offer, or test one small part of your idea.',
+          ),
+          (
+            title: 'Capture the result',
+            description: 'Note what happened and choose one practical follow-up based on what you learned.',
+          ),
+        ];
       case 'Reading':
-        return (
-          title: 'Read a few pages',
-          description: 'Read a book or saved article away from distracting apps. Capture one idea you want to remember.',
-        );
+        return [
+          (
+            title: 'Choose what to read',
+            description: 'Pick a book or saved article and decide how much you want to read today.',
+          ),
+          (
+            title: 'Read without distractions',
+            description: 'Read your chosen material away from distracting apps and pause when your focus slips.',
+          ),
+          (
+            title: 'Save one takeaway',
+            description: 'Write down one idea, passage, or question you want to remember.',
+          ),
+        ];
       case 'Fitness':
-        return (
-          title: 'Move your body',
-          description: 'Do a comfortable walk, mobility routine, or workout that suits your current ability. Start gently and stop if you feel pain.',
-        );
+        return [
+          (
+            title: 'Choose comfortable movement',
+            description: 'Pick a walk, mobility routine, or workout that suits your current ability.',
+          ),
+          (
+            title: 'Get moving safely',
+            description: 'Start gently and do your chosen movement at a comfortable pace. Stop if you feel pain.',
+          ),
+          (
+            title: 'Cool down and reflect',
+            description: 'Take a moment to recover and note how the movement felt so you can adjust next time.',
+          ),
+        ];
       case 'Personal Development':
-        return (
-          title: 'Invest in yourself',
-          description: 'Spend a short, distraction-free block journaling, practicing a useful skill, or reflecting on a personal value.',
-        );
+        return [
+          (
+            title: 'Choose an area to develop',
+            description: 'Pick one personal value or useful skill you want to give attention today.',
+          ),
+          (
+            title: 'Practice with intention',
+            description: 'Journal, practice your chosen skill, or reflect without distractions.',
+          ),
+          (
+            title: 'Record one insight',
+            description: 'Write down what you noticed and one small way to apply it tomorrow.',
+          ),
+        ];
       default:
-        return (
-          title: 'Make progress on $goal',
-          description:
-              'Choose one small, specific action related to $goal and give it a focused block without switching to distracting apps.',
-        );
+        return [
+          (
+            title: 'Choose a step for $goal',
+            description:
+                'Define one small, specific result you would like to reach for $goal.',
+          ),
+          (
+            title: 'Make focused progress on $goal',
+            description:
+                'Work on your chosen action for $goal without switching to distracting apps.',
+          ),
+          (
+            title: 'Review your progress on $goal',
+            description:
+                'Notice what you accomplished for $goal and choose one small next step.',
+          ),
+        ];
     }
   }
 }

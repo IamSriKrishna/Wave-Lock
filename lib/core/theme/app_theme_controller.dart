@@ -25,16 +25,27 @@ class AppThemeController extends ChangeNotifier {
 
     _palette = AppColorPalette.fromId(paletteId);
     AppColors.palette = _palette;
+    notifyListeners();
   }
 
   Future<void> selectPalette(AppColorPalette palette) async {
-    final database = await _appDatabase.database;
-    await DatabaseStores.settings.record(_settingsKey).put(database, {
-      'value': palette.id,
-    });
-
+    final previousPalette = _palette;
     _palette = palette;
     AppColors.palette = palette;
     notifyListeners();
+
+    try {
+      final database = await _appDatabase.database;
+      await DatabaseStores.settings.record(_settingsKey).put(database, {
+        'value': palette.id,
+      });
+    } catch (_) {
+      if (_palette == palette) {
+        _palette = previousPalette;
+        AppColors.palette = previousPalette;
+        notifyListeners();
+      }
+      rethrow;
+    }
   }
 }
